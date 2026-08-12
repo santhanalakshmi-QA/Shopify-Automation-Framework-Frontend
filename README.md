@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Khajal Shopify Presets — Playwright Test Suite
 
 One shared spec set, run against **four preset stores** of the Khajal theme:
@@ -421,3 +422,6 @@ Selectors are intentionally permissive so the suite tolerates minor markup
 differences between presets. If one preset diverges, fix it in
 `locators/shopify-locators.js` — every page object reads from that single
 source of truth. No locator is ever written in a spec file.
+=======
+# Shopify-Automation-Framework-Frontend
+>>>>>>> cdc231f2625300535bfbe4f6ce20f37acb247507
