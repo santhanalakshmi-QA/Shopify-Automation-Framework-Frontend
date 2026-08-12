@@ -1,0 +1,89 @@
+name: Theme tests
+
+# Two tiers, because the full matrix is too slow to sit in front of:
+#   push / PR  -> desktop only, fast feedback
+#   nightly    -> every preset x viewport, the real baseline
+#
+# The storefront password is NEVER committed. Add it once in
+# Settings -> Secrets and variables -> Actions as STOREFRONT_PASSWORD.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    # 02:30 UTC nightly.
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Which projects to run
+        required: false
+        default: desktop
+        type: choice
+        options: [desktop, full]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Only the engines the projects actually use.
+      - name: Install browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Fail early if the storefront password is missing
+        env:
+          STOREFRONT_PASSWORD: ${{ secrets.STOREFRONT_PASSWORD }}
+        run: |
+          if [ -z "$STOREFRONT_PASSWORD" ]; then
+            echo "::error::STOREFRONT_PASSWORD secret is not set. Every store is"
+            echo "::error::password protected, so the whole run would fail on the gate."
+            exit 1
+          fi
+
+      # Desktop only on push/PR — fast. Everything on the nightly run.
+      - name: Run tests
+        env:
+          CI: 'true'
+          STOREFRONT_PASSWORD: ${{ secrets.STOREFRONT_PASSWORD }}
+          # Video is the single biggest cost; traces on retry are enough
+          # to debug a CI failure.
+          PW_VIDEO: on-first-retry
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.scope }}" = "full" ]; then
+            echo "Running the full preset x viewport matrix"
+            npx playwright test
+          else
+            echo "Running desktop projects only"
+            npx playwright test \
+              --project=khajal-desktop --project=doll-desktop \
+              --project=dense-desktop --project=moonlight-desktop
+          fi
+
+      # Always upload: a failing run is exactly when you want the report.
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-${{ github.run_id }}
+          path: allure-results/
+          retention-days: 14

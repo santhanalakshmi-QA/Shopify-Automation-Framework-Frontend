@@ -1,0 +1,24 @@
+node_modules/
+
+playwright-report/
+
+test-results/
+
+reports/
+
+screenshots/
+
+allure-results/
+
+allure-report/
+
+.env
+
+.DS_Store
+
+.vscode/settings.json
+# Cached storefront sessions — contain live auth cookies
+.auth/
+
+# Local env overrides
+.env.local

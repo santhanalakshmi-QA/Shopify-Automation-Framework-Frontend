@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"],
+
+    // Page objects, locators and helpers are JavaScript (per the project
+    // coding rules); the config, fixtures and specs are TypeScript.
+    // Allow the mix, but do not type-check the .js files.
+    "allowJs": true,
+    "checkJs": false,
+
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "strict": false,
+
+    // Playwright transpiles on the fly — tsc is only used for editor
+    // support and the `npm run typecheck` gate.
+    "noEmit": true
+  },
+  "include": [
+    "playwright.config.ts",
+    "tests/**/*",
+    "pages/**/*",
+    "utils/**/*",
+    "locators/**/*"
+  ],
+  "exclude": ["node_modules", "allure-report", "allure-results", "playwright-report", "test-results"]
+}

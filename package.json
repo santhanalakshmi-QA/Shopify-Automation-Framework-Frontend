@@ -1,0 +1,55 @@
+{
+  "name": "khajal-shopify-preset-tests",
+  "version": "1.0.0",
+  "description": "Playwright test suite running one shared spec set against the four Khajal Shopify theme preset stores.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+
+    "test:khajal": "playwright test --project=khajal-desktop --project=khajal-tablet --project=khajal-mobile",
+    "test:doll": "playwright test --project=doll-desktop --project=doll-tablet --project=doll-mobile",
+    "test:dense": "playwright test --project=dense-desktop --project=dense-tablet --project=dense-mobile",
+    "test:moonlight": "playwright test --project=moonlight-desktop --project=moonlight-tablet --project=moonlight-mobile",
+
+    "test:desktop": "playwright test --project=khajal-desktop --project=doll-desktop --project=dense-desktop --project=moonlight-desktop",
+    "test:tablet": "playwright test --project=khajal-tablet --project=doll-tablet --project=dense-tablet --project=moonlight-tablet",
+    "test:mobile": "playwright test --project=khajal-mobile --project=doll-mobile --project=dense-mobile --project=moonlight-mobile",
+
+    "unlock": "playwright test --project=khajal-setup --project=doll-setup --project=dense-setup --project=moonlight-setup",
+    "sync:sections": "node scripts/sync-sections.mjs",
+    "typecheck": "tsc --noEmit",
+
+    "watch": "playwright test --ui --retries=0 --project=khajal-desktop",
+    "watch:all": "playwright test --ui --retries=0",
+    "watch:doll": "playwright test --ui --retries=0 --project=doll-desktop",
+    "watch:dense": "playwright test --ui --retries=0 --project=dense-desktop",
+    "watch:moonlight": "playwright test --ui --retries=0 --project=moonlight-desktop",
+    "watch:slideshow": "playwright test --ui --retries=0 slideshow.spec.ts --project=khajal-desktop --project=doll-desktop --project=dense-desktop --project=moonlight-desktop",
+
+    "demo": "node scripts/demo.mjs",
+    "demo:slideshow": "node scripts/demo.mjs slideshow",
+    "demo:header": "node scripts/demo.mjs header --project khajal-desktop",
+    "demo:rich-text": "node scripts/demo.mjs rich-text --project khajal-desktop",
+
+    "test:noretry": "playwright test --retries=0",
+
+    "report": "playwright show-report",
+    "allure": "allure generate allure-results --clean -o allure-report && allure open allure-report",
+    "allure:archive": "node scripts/allure-archive.mjs",
+    "allure:list": "node scripts/allure-list.mjs",
+    "test:allure": "node scripts/allure-report.mjs",
+    "allure:generate": "allure generate allure-results --clean -o allure-report",
+    "allure:open": "allure open allure-report",
+    "allure:report": "allure generate allure-results --clean -o allure-report && allure open allure-report",
+    "allure:clean": "node scripts/allure-clean.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.0.0",
+    "allure-commandline": "^2.32.0",
+    "allure-playwright": "^3.0.0",
+    "dotenv": "^17.4.2",
+    "typescript": "^5.5.0"
+  }
+}

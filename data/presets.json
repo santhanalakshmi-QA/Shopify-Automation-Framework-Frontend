@@ -1,0 +1,216 @@
+{
+  "_comment": [
+    "Registry of every Shopify preset store the suite runs against.",
+    "Each entry becomes a Playwright project group (setup + desktop/tablet/mobile).",
+    "Per-preset overrides are read from the environment at load time:",
+    "  PRESET_<KEY>_URL       overrides 'url'      (KEY uppercased, '-' -> '_')",
+    "  PRESET_<KEY>_PASSWORD  overrides 'password'",
+    "  STOREFRONT_PASSWORD    fallback password for every preset",
+    "A null expectation means 'not applicable to this preset' and the matching",
+    "test skips with an annotation instead of failing (degrade-don't-fail).",
+    "All values below were verified against the live storefronts."
+  ],
+  "presets": [
+    {
+      "key": "khajal",
+      "label": "Khajal - Default",
+      "url": "https://khajal-theme.myshopify.com",
+      "password": null,
+      "nav": {
+        "homeLabel": "Home",
+        "blogLabel": "Journal",
+        "minTopLevelItems": 5
+      },
+      "logo": {
+        "expectedFormat": ".png"
+      },
+      "features": {
+        "megaMenu": true,
+        "navDepth2": true,
+        "navDepth3": false,
+        "mobileDrawer": true,
+        "mobileSubmenu": true,
+        "search": true,
+        "searchIconDesktop": true,
+        "account": true,
+        "stickyHeader": false
+      },
+      "sections": {
+        "collection_list": 1,
+        "faq": 1,
+        "featured_collection": 2,
+        "featured_product": 1,
+        "icon_with_text": 1,
+        "image_banner": 1,
+        "image_gallery": 1,
+        "rich_text": 1,
+        "shoppable_video": 1,
+        "slideshow": 1,
+        "spotlight_gallery": 1,
+        "testimonial": 1,
+        "video_banner": 1
+      },
+      "slideshow": {
+        "arrows": false,
+        "dots": true,
+        "videoSlide": false,
+        "ctaLinks": true,
+        "mobileImage": true,
+        "slideLinks": true,
+        "autoplay": false,
+        "loop": true
+      },
+      "richText": {
+        "copyCode": true,
+        "heading": false,
+        "links": false
+      }
+    },
+    {
+      "key": "doll",
+      "label": "Khajal - Doll",
+      "url": "https://khajal-doll.myshopify.com",
+      "password": null,
+      "nav": {
+        "homeLabel": "Home",
+        "blogLabel": null,
+        "minTopLevelItems": 3
+      },
+      "logo": {
+        "expectedFormat": ".png"
+      },
+      "features": {
+        "megaMenu": false,
+        "navDepth2": false,
+        "navDepth3": false,
+        "mobileDrawer": true,
+        "mobileSubmenu": false,
+        "search": true,
+        "searchIconDesktop": false,
+        "account": true,
+        "stickyHeader": false
+      },
+      "sections": {
+        "brand_logo": 1,
+        "collection_list": 1,
+        "faq": 1,
+        "featured_collection": 1,
+        "grid_banner": 1,
+        "icon_with_text": 2,
+        "image_banner": 1,
+        "image_gallery": 1,
+        "newsletter": 1,
+        "shoppable_video": 1,
+        "slideshow": 1,
+        "testimonial": 1
+      },
+      "slideshow": {
+        "arrows": true,
+        "dots": false,
+        "videoSlide": false,
+        "ctaLinks": true,
+        "mobileImage": true,
+        "slideLinks": true,
+        "autoplay": false,
+        "loop": true
+      }
+    },
+    {
+      "key": "dense",
+      "label": "Khajal - Dense",
+      "url": "https://khajal-dense.myshopify.com",
+      "password": null,
+      "nav": {
+        "homeLabel": "Home",
+        "blogLabel": null,
+        "minTopLevelItems": 3
+      },
+      "logo": {
+        "expectedFormat": ".png"
+      },
+      "features": {
+        "megaMenu": false,
+        "navDepth2": false,
+        "navDepth3": false,
+        "mobileDrawer": true,
+        "mobileSubmenu": false,
+        "search": true,
+        "searchIconDesktop": true,
+        "account": true,
+        "stickyHeader": true
+      },
+      "sections": {
+        "faq": 1,
+        "faq_with_tabs": 1,
+        "grid_showcase": 1,
+        "icon_with_text": 1,
+        "image_banner": 1,
+        "image_comparison": 1,
+        "image_gallery": 1,
+        "number_counter": 1,
+        "slideshow": 1,
+        "specification_section": 1,
+        "testimonial": 2,
+        "video_banner": 1
+      },
+      "slideshow": {
+        "arrows": false,
+        "dots": false,
+        "videoSlide": false,
+        "ctaLinks": false,
+        "mobileImage": false,
+        "slideLinks": true,
+        "autoplay": false,
+        "loop": true
+      }
+    },
+    {
+      "key": "moonlight",
+      "label": "Khajal - Moonlight",
+      "url": "https://khajal-moonlight.myshopify.com",
+      "password": null,
+      "nav": {
+        "homeLabel": "Home",
+        "blogLabel": null,
+        "minTopLevelItems": 3
+      },
+      "logo": {
+        "expectedFormat": ".png"
+      },
+      "features": {
+        "megaMenu": false,
+        "navDepth2": false,
+        "navDepth3": false,
+        "mobileDrawer": true,
+        "mobileSubmenu": false,
+        "search": true,
+        "searchIconDesktop": true,
+        "account": true,
+        "stickyHeader": true
+      },
+      "sections": {
+        "before_after": 1,
+        "featured_collection": 2,
+        "grid_banner": 1,
+        "hotspot": 1,
+        "icon_with_text": 1,
+        "image_gallery": 1,
+        "marquee": 1,
+        "quiz": 1,
+        "shoppable_video": 1,
+        "slideshow": 1,
+        "testimonial": 1
+      },
+      "slideshow": {
+        "arrows": false,
+        "dots": true,
+        "videoSlide": true,
+        "ctaLinks": false,
+        "mobileImage": false,
+        "slideLinks": false,
+        "autoplay": false,
+        "loop": true
+      }
+    }
+  ]
+}
