@@ -15,6 +15,14 @@
 
 export const DEMO = process.env.PW_DEMO === '1';
 
+// PW_DEMO_SHOT=1 saves a PNG while each highlight is lit — a proof
+// image straight out of the real test run, not a staged capture.
+const SHOT = process.env.PW_DEMO_SHOT === '1';
+let currentCheck = 'check';
+// The last thing a check looked at, so the final verdict can be shown
+// on those same elements once the test result is known.
+let lastSpotted = null;
+
 // One short line per check — what a person would say out loud while
 // watching it happen.
 const CLUES = {
@@ -108,6 +116,59 @@ const CLUES = {
   'SS-PERF-02': 'Is it animating cheaply (transform) or expensively (left)?',
   'SS-NEG-12': 'Blocking the slideshow’s JavaScript — does it degrade gracefully?',
 
+  // ── Testimonials (carousel of customer quote cards) ────────
+  'TS-RENDER-01': 'Are all the testimonial sections on the page?',
+  'TS-RENDER-02': 'Counting the quote cards in each section.',
+  'TS-RENDER-03': 'Has any card collapsed to no height?',
+  'TS-RENDER-04': 'Any raw "Translation missing:" text showing?',
+  'TS-RENDER-05': 'Reloading and listening for JavaScript errors.',
+  'TS-CONTENT-01': 'Does every card actually show a quote?',
+  'TS-CONTENT-02': 'Is every quote attributed to someone?',
+  'TS-CONTENT-03': 'Is the same quote pasted in twice?',
+  'TS-CONTENT-04': 'Is there a heading framing this row of quotes?',
+  'TS-RATING-01': 'Does every card carry a star rating?',
+  'TS-RATING-02': 'Are the ratings announced, and within their own scale?',
+  'TS-MEDIA-01': 'Does every card have a photo?',
+  'TS-MEDIA-02': 'Does every photo have alt text?',
+  'TS-MEDIA-03': 'Any broken-image icons among the cards?',
+  'TS-NAV-01': 'Clicking the arrow — do the quotes actually move?',
+  'TS-NAV-02': 'Are the arrows named for a screen reader?',
+  'TS-LINK-01/03/04': 'Any links that go nowhere, are unsafe, or are empty boxes?',
+  'TS-LAYOUT-01': 'Does this section push the page sideways?',
+  'TS-LAYOUT-02': 'Resizing 1440 → 1200 → 1024 → 768 → 390, checking it holds.',
+  'TS-A11Y-01': 'Accessibility sweep for critical problems.',
+  'TS-A11Y-02': 'Is the text readable against its background (4.5:1)?',
+
+  // ── Collection list (carousel of collection cards) ─────────
+  'CL-RENDER-01': 'Is the collection list on the page?',
+  'CL-RENDER-02': 'Counting the cards — does it match what we expect?',
+  'CL-RENDER-03': 'Does the section have real height, or has it collapsed?',
+  'CL-RENDER-04': 'Any raw "Translation missing:" text showing?',
+  'CL-RENDER-05': 'Reloading and listening for JavaScript errors.',
+  'CL-CONTENT-01': 'Does every card show a collection name?',
+  'CL-CONTENT-02': 'Does every card actually link to a collection?',
+  'CL-CONTENT-03': 'Is the same collection listed twice by mistake?',
+  'CL-CONTENT-04': 'Is there a heading telling you what this row is?',
+  'CL-CONTENT-05': 'Do the "5 Items" counts show a real number?',
+  'CL-MEDIA-01': 'Does every card have a picture?',
+  'CL-MEDIA-02': 'Does every picture have alt text?',
+  'CL-MEDIA-03': 'Do images declare their size so the page does not jump?',
+  'CL-MEDIA-04': 'Any broken-image icons among the cards?',
+  'CL-NAV-01': 'Clicking the arrow — does the row actually move?',
+  'CL-NAV-02': 'Forward then back — does it return where it started?',
+  'CL-NAV-03': 'Are the arrows named for a screen reader?',
+  'CL-AUTO-01': 'Autoplay is on — waiting to see it slide by itself.',
+  'CL-AUTO-02': 'Hovering the row — does it stop so you can click?',
+  'CL-LINK-01/03/04': 'Any links that go nowhere, are unsafe, or are empty boxes?',
+  'CL-LINK-02': 'Fetching every collection link — do they all still exist?',
+  'CL-LINK-05': 'Do the picture and the name lead to the SAME collection?',
+  'CL-LAYOUT-01': 'Does this section push the page sideways?',
+  'CL-LAYOUT-02': 'Is any card text spilling outside its card?',
+  'CL-LAYOUT-03': 'Resizing 1440 → 1200 → 1024 → 768 → 390, checking it holds.',
+  'CL-A11Y-01': 'Accessibility sweep for critical problems.',
+  'CL-A11Y-02': 'Is the text readable against its background (4.5:1)?',
+  'CL-A11Y-03': 'Would a screen reader say more than just "link"?',
+
   // ── Rich text (promo banner with a discount code) ──────────
   'RT-RENDER-01': 'Is the rich-text section on the page?',
   'RT-RENDER-02': 'Does it actually show any words, or is it an empty band?',
@@ -128,6 +189,129 @@ const CLUES = {
   'RT-A11Y-02': 'Is the text readable against its background (4.5:1)?',
   'RT-A11Y-03': 'Focusing the copy button — is there a visible focus ring?',
 };
+
+/**
+ * Briefly outline the elements a check is looking at.
+ *
+ * The banner says WHAT is being checked; this shows WHERE. Without it a
+ * passing run is just a green tick you have to take on faith.
+ *
+ * No-op outside demo mode, so it can be called freely from shared
+ * helpers without affecting real runs. Uses outline and background only
+ * — neither affects layout, so it cannot skew a geometry assertion even
+ * if one were running.
+ */
+export async function spot(locator, ms = null) {
+  if (!DEMO) return;
+
+  // Hold the highlight long enough to actually notice it. 650ms was
+  // easy to miss entirely — the check passed, the outline flashed, and
+  // nothing remained on screen to show it had happened.
+  //
+  // Scales with --slowmo so a deliberately slow run gets a deliberately
+  // slow highlight; PW_SPOT_MS overrides it outright.
+  const slowmo = Number(process.env.PW_SLOWMO ?? 0);
+  const override = Number(process.env.PW_SPOT_MS ?? 0);
+  const hold = ms ?? (override > 0 ? override : Math.max(1100, slowmo * 1.5));
+  lastSpotted = locator;
+  try {
+    if ((await locator.count()) === 0) return;
+
+    await locator.evaluateAll((els) =>
+      els.forEach((el) => el.setAttribute('data-pw-check', ''))
+    );
+    await saveProof(locator);
+    await locator.page().waitForTimeout(hold);
+    await locator.evaluateAll((els) =>
+      els.forEach((el) => el.removeAttribute('data-pw-check'))
+    );
+  } catch {
+    /* highlighting must never fail a test */
+  }
+}
+
+/**
+ * Highlight each element with its OWN verdict: green where it passed,
+ * red where it did not.
+ *
+ * `spot()` shows what a check looked at. This shows what it concluded,
+ * element by element — so a passing check is visibly a row of green
+ * ticks rather than an assertion you have to take on trust, and a
+ * failing one points straight at the offender.
+ *
+ * `verdicts[i]` corresponds to the i-th matched element.
+ */
+export async function spotVerdicts(locator, verdicts, ms = null) {
+  if (!DEMO) return;
+  lastSpotted = locator;
+  try {
+    if ((await locator.count()) === 0) return;
+
+    const slowmo = Number(process.env.PW_SLOWMO ?? 0);
+    const override = Number(process.env.PW_SPOT_MS ?? 0);
+    const hold = ms ?? (override > 0 ? override : Math.max(1400, slowmo * 1.8));
+
+    await locator.evaluateAll((els, v) => {
+      els.forEach((el, i) => {
+        el.setAttribute(v[i] === false ? 'data-pw-fail' : 'data-pw-pass', '');
+      });
+    }, verdicts);
+
+    await saveProof(locator, 'verdict');
+    await locator.page().waitForTimeout(hold);
+
+    await locator.evaluateAll((els) =>
+      els.forEach((el) => {
+        el.removeAttribute('data-pw-pass');
+        el.removeAttribute('data-pw-fail');
+      })
+    );
+  } catch {
+    /* highlighting must never fail a test */
+  }
+}
+
+/**
+ * Re-mark whatever the check last inspected with its OUTCOME: green if
+ * the test passed, red if it failed. Called automatically after every
+ * test by the `verdict` fixture, so a passing check ends with visible
+ * proof on the page rather than only a tick in the terminal.
+ */
+export async function flashVerdict(passed, ms = 900) {
+  if (!DEMO || !lastSpotted) return;
+  const locator = lastSpotted;
+  lastSpotted = null;
+
+  try {
+    if ((await locator.count()) === 0) return;
+
+    await locator.evaluateAll((els, ok) => {
+      els.forEach((el) => el.setAttribute(ok ? 'data-pw-pass' : 'data-pw-fail', ''));
+    }, passed);
+
+    await saveProof(locator, passed ? 'pass' : 'fail');
+    await locator.page().waitForTimeout(ms);
+
+    await locator.evaluateAll((els) =>
+      els.forEach((el) => {
+        el.removeAttribute('data-pw-pass');
+        el.removeAttribute('data-pw-fail');
+      })
+    );
+  } catch {
+    /* the page may already be closing — never fail a test over this */
+  }
+}
+
+async function saveProof(locator, suffix) {
+  if (!SHOT) return;
+  try {
+    const file = 'reports/demo-shots/' + currentCheck + (suffix ? '-' + suffix : '') + '.png';
+    await locator.page().screenshot({ path: file });
+  } catch {
+    /* proof shots are best-effort */
+  }
+}
 
 /** Pull the check ID out of a test title such as "SS-NAV-01 — next advances…". */
 export function checkId(title) {
@@ -157,6 +341,14 @@ export async function mountNarrator(page, options) {
     title, preset = '', index = 0, total = 0,
     spotlight = '.slideshow-section',
   } = options ?? {};
+
+  // Header tests carry no SS-/CL- style id, so fall back to a slug of
+  // the title — otherwise every proof shot is called 'check.png' and
+  // each one overwrites the last.
+  currentCheck =
+    checkId(title) ||
+    String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) ||
+    'check';
 
   const payload = {
     id: checkId(title) || 'CHECK',
@@ -200,6 +392,30 @@ export async function mountNarrator(page, options) {
         #__pwNarrator .__pwMeta {
           margin-left: auto; font-weight: 500; font-size: 12px; opacity: .65;
           font-family: ui-monospace, Consolas, monospace;
+        }
+        /* Drawn INSIDE the element's own bounds: cards on this theme
+           use a clipping mask, and an outward outline is clipped away
+           entirely — the highlight looked like it simply never ran. */
+        [data-pw-check] {
+          outline: 3px solid #FFC53D !important;
+          outline-offset: -3px !important;
+          box-shadow: inset 0 0 0 3px #FFC53D, 0 0 12px 2px rgba(255,197,61,.85) !important;
+          background-color: rgba(255,197,61,.18) !important;
+          transition: none !important;
+        }
+        /* Per-element verdicts: green passed, red did not. Drawn
+           inside the element for the same clipping reason as above. */
+        [data-pw-pass] {
+          outline: 3px solid #2FBF63 !important;
+          outline-offset: -3px !important;
+          box-shadow: inset 0 0 0 3px #2FBF63, 0 0 12px 2px rgba(47,191,99,.75) !important;
+          background-color: rgba(47,191,99,.16) !important;
+        }
+        [data-pw-fail] {
+          outline: 3px solid #F04438 !important;
+          outline-offset: -3px !important;
+          box-shadow: inset 0 0 0 3px #F04438, 0 0 14px 3px rgba(240,68,56,.85) !important;
+          background-color: rgba(240,68,56,.20) !important;
         }
         [data-pw-spot] {
           outline: 3px solid #64B5D1 !important;

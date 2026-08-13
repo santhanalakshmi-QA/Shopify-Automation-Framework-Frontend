@@ -212,9 +212,29 @@ const LOCATORS = {
     collectionLink: 'a[href*="/collections/"]',
     productCard:    '[class*="product-card"], [class*="card--product"], a[href*="/products/"]',
   },
+  // Collection list — a Swiper carousel of collection cards. Verified
+  // against khajal (10 cards, arrows visible, autoplay on) and doll
+  // (4 cards, arrows hidden, autoplay off).
+  //
+  // Note the card IS the swiper slide: `.cl-collection-card` carries the
+  // `swiper-slide` class rather than sitting inside one.
   collectionList: {
-    section: '[id^="shopify-section"] .collection-list, [id^="shopify-section"] [class*="collection-list"]',
-    tile:    'a[href*="/collections/"], [class*="collection-list__item"], [class*="collection-card"]',
+    section:     '.collection-list',
+    carousel:    '.collection-list-carousel',
+    swiper:      '.collection-list .swiper',
+    card:        '.cl-collection-card',
+    cardInner:   '.cl-card__inner',
+    imageLink:   'a.cl-collection-image__media',
+    image:       '.cl-collection-card img',
+    titleWrap:   '.collection-title',
+    titleLink:   'a.collection-title__link',
+    itemCount:   '.collection-title__count',
+    // The section heading carries a generated block id, so match on the
+    // stable "__heading" fragment rather than the full class.
+    heading:     '[class*="__heading"]',
+    nextArrow:   '.swiper-button-next',
+    prevArrow:   '.swiper-button-prev',
+    bullets:     '.swiper-pagination-bullet',
   },
   imageWithText: {
     section: '[id^="shopify-section"] .image-with-text, [id^="shopify-section"] [class*="image-with-text"]',
@@ -336,13 +356,28 @@ const LOCATORS = {
     prevButton:  '.quiz-button-prev',
   },
 
-  // Testimonials (customer quotes with author blocks)
+  // Testimonials — a Swiper carousel of quote cards. Verified against
+  // all four presets: identical markup, different content and layout
+  // variants (`--overlay` on khajal, `--grid` elsewhere).
+  //
+  // Quote and author use generated block ids, so match on the stable
+  // "__heading" / "__description" fragments rather than the full class.
   testimonials: {
-    section:      '.section-testimonials, [class*="testimonial"], [id*="__testimonials"]',
-    block:        '.testimonial_block, .testimonial-content',
-    authorName:   '.testimonial_author_title',
-    authorRole:   '.testimonial_author_subtitle',
-    image:        '.testimonial_image img, .testimonial_image',
+    section:      '.testimonial',
+    content:      '.testimonial-content',
+    carousel:     '.testimonial-content__carousel',
+    track:        '.testimonial-content__track',
+    card:         '.testimonial-card',
+    media:        '.testimonial-card__media',
+    image:        '.testimonial-card__img',
+    body:         '.testimonial-card__body',
+    rating:       '.testimonial-rating',
+    ratingStars:  '.testimonial-rating__stars',
+    quote:        '[class*="__heading"]',
+    author:       '[class*="__description"]',
+    nextArrow:    '.swiper-button-next',
+    prevArrow:    '.swiper-button-prev',
+    bullets:      '.swiper-pagination-bullet',
   },
 
   // Shoppable videos (renders as the theme's video grid)

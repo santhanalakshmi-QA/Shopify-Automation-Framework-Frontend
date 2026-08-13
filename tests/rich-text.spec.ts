@@ -25,7 +25,7 @@
 import { test, expect, sectionCount } from '../utils/fixtures';
 import AxeBuilder from '@axe-core/playwright';
 import { RichTextPage } from '../pages/RichTextPage.js';
-import { mountNarrator } from '../utils/demo-hud.js';
+import { mountNarrator, spot } from '../utils/demo-hud.js';
 import { checksFor } from '../utils/slideshow-checks.js';
 
 const SECTION = 'rich_text';
@@ -82,6 +82,7 @@ test.describe('Rich text', () => {
   test.describe('Render & structure', () => {
 
     test('RT-RENDER-01 — section present, and as many as the manifest declares', async ({ preset }) => {
+      await spot(rt.section());
       await expect(
         rt.section(),
         `RT-RENDER-01 / missing: no rich-text section matched ".rich-text" on ${preset.url}.`
@@ -95,6 +96,7 @@ test.describe('Rich text', () => {
     });
 
     test('RT-RENDER-02 — the section renders visible copy', async () => {
+      await spot(rt.section());
       const text = ((await rt.section().innerText()) ?? '').trim();
       expect(
         text.length,
@@ -110,6 +112,7 @@ test.describe('Rich text', () => {
     });
 
     test('RT-RENDER-04 — no missing translation keys', async () => {
+      await spot(rt.section());
       await expectNoMissingTranslations(rt.section());
     });
 
@@ -157,6 +160,7 @@ test.describe('Rich text', () => {
     });
 
     test('RT-COPY-02 — the copy button has an accessible name', async () => {
+      await spot(rt.copyButton());
       const button = rt.copyButton();
       const name =
         (await button.getAttribute('aria-label')) ??
@@ -211,6 +215,7 @@ test.describe('Rich text', () => {
     });
 
     test('RT-COPY-05 — the copy button works from the keyboard', async ({ context }) => {
+      await spot(rt.copyButton());
       await tryGrantClipboard(context);
 
       const button = rt.copyButton();
@@ -245,6 +250,7 @@ test.describe('Rich text', () => {
     });
 
     test('RT-LAYOUT-03 — the configured alignment is applied', async () => {
+      await spot(rt.section());
       const align = await rt.alignment();
       test.skip(!align, 'This section sets no alignment modifier.');
 
@@ -268,6 +274,7 @@ test.describe('Rich text', () => {
     });
 
     test('RT-LAYOUT-04 — layout holds across the viewport matrix', async ({ page }) => {
+      await spot(rt.section());
       const broken: string[] = [];
       for (const width of [1440, 1200, 1024, 768, 390]) {
         await page.setViewportSize({ width, height: 900 });
@@ -344,6 +351,7 @@ test.describe('Rich text', () => {
     });
 
     test('RT-A11Y-03 — the copy button shows a visible focus indicator', async () => {
+      await spot(rt.copyButton());
       const button = rt.copyButton();
       const style = (el: Element) => {
         const s = getComputedStyle(el);

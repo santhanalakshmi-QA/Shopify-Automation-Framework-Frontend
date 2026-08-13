@@ -41,6 +41,14 @@ const chosen = projects.length ? projects : DEFAULT_PROJECTS;
 // --slowmo 0 for full speed, or a bigger number to study a step.
 const slowmo = flag('slowmo', '450');
 
+// --record keeps a video of the run so it can be replayed and paused.
+// Watching live is easy to miss; a file is not.
+const record = argv.includes('--record');
+
+// --grep / -g runs a single check instead of the whole section, e.g.
+//   npm run demo:collection-list -- --grep CL-CONTENT-01
+const grep = flag('grep') ?? flag('g');
+
 const args = [
   'playwright', 'test',
   `${spec}.spec.ts`,
@@ -48,11 +56,13 @@ const args = [
   '--workers=1',
   '--retries=0',
   ...chosen.map((p) => `--project=${p}`),
+  ...(grep ? ['-g', JSON.stringify(grep)] : []),
 ];
 
 console.log(`\n▶  Demo: ${spec}.spec.ts`);
 console.log(`   projects : ${chosen.join(', ')}`);
 console.log(`   slow-mo  : ${slowmo === '0' ? 'off' : `${slowmo}ms per action`}`);
+console.log(`   filter   : ${grep ? grep : 'none — running the whole section'}`);
 console.log(`   window   : maximized, headed, 1 worker\n`);
 
 const child = spawn('npx', args, {
@@ -60,10 +70,14 @@ const child = spawn('npx', args, {
   shell: true,
   env: {
     ...process.env,
+    // Turns on the on-screen narrator and the element highlighting.
+    // Without this the run is an ordinary headed run with no overlay at
+    // all — which is exactly what it was until this line was added.
+    PW_DEMO: '1',
     PW_SLOWMO: slowmo,
     PW_MAXIMIZE: '1',
     // Artifacts are pointless for a run you are watching live.
-    PW_VIDEO: 'off',
+    PW_VIDEO: record ? 'on' : 'off',
     PW_TRACE: 'off',
   },
 });

@@ -37,7 +37,7 @@
 import { test, expect, sectionCount } from '../utils/fixtures';
 import AxeBuilder from '@axe-core/playwright';
 import { SlideshowPage } from '../pages/SlideshowPage.js';
-import { mountNarrator } from '../utils/demo-hud.js';
+import { mountNarrator, spot } from '../utils/demo-hud.js';
 import {
   assertRenderHealth,
   expectNoMissingTranslations,
@@ -73,6 +73,7 @@ test.describe('Slideshow', () => {
   test.describe('Render & structure', () => {
 
     test('SS-RENDER-01 — section present and visible', async ({ preset }) => {
+      await spot(ss.section());
       await expect(
         ss.section(),
         `SS-RENDER-01 / missing: no slideshow root matched ".slideshow-section" on ${preset.url}.`
@@ -115,10 +116,12 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-RENDER-06 — no missing translation keys', async () => {
+      await spot(ss.section());
       await expectNoMissingTranslations(ss.section());
     });
 
     test('SS-RENDER-09 — only one slide is showing at a time', async () => {
+      await spot(ss.section());
       await expect(
         ss.section().locator('.swiper-slide-active'),
         `SS-RENDER-09 / multiple-active: more than one slide is marked active. The carousel ` +
@@ -127,6 +130,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-RENDER-10 — slides are in the order they were set', async () => {
+      await spot(ss.slides());
       // Each slide advertises its own position ("1 / 3") for screen
       // readers. Those positions must ascend in DOM order — if they do
       // not, the carousel has reordered the merchant's slides.
@@ -241,6 +245,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-NAV-05 — new active slide lands inside the window', async () => {
+      await spot(ss.section());
       await ss.goToNextSlide();
       await ss.page.waitForTimeout(500);
 
@@ -257,6 +262,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-NAV-06 — rapid double-click does not desync', async () => {
+      await spot(ss.nextArrow());
       test.skip((await ss.slideCount()) < 3, 'Needs at least three slides.');
 
       await ss.nextArrow().click();
@@ -278,6 +284,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-NAV-07 — arrows are keyboard-operable (Enter and Space)', async () => {
+      await spot(ss.nextArrow());
       for (const key of ['Enter', 'Space']) {
         const before = await ss.realIndex();
         await ss.nextArrow().focus();
@@ -354,6 +361,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-LOOP-04 — loop OFF clamps at the first slide', async () => {
+      await spot(ss.prevArrow());
       test.skip(!(await ss.hasPrevArrow()), 'This preset renders no previous arrow.');
 
       expect(await ss.realIndex(), 'expected to start on slide 1').toBe(0);
@@ -368,6 +376,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-LOOP-05 — boundary arrow is marked disabled', async () => {
+      await spot(ss.nextArrow());
       test.skip(!(await ss.hasNextArrow()), 'This preset renders no arrow controls.');
 
       const total = await ss.slideCount();
@@ -416,6 +425,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-DOT-01 — dot count equals slide count', async () => {
+      await spot(ss.bullets());
       const dots = await ss.bullets().count();
       const slides = await ss.slideCount();
       expect(
@@ -426,6 +436,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-DOT-02 — active dot matches the visible slide', async () => {
+      await spot(ss.bullets());
       const index = await ss.realIndex();
       await expect(
         ss.bulletAt(index),
@@ -436,6 +447,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-DOT-03 — clicking dot N jumps to slide N', async () => {
+      await spot(ss.bullets());
       const dots = await ss.bullets().count();
       test.skip(dots < 2, 'Needs at least two dots.');
 
@@ -451,6 +463,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-DOT-04 — dots have accessible names', async () => {
+      await spot(ss.bullets());
       const dots = ss.bullets();
       const count = await dots.count();
       const unnamed: number[] = [];
@@ -534,6 +547,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-AUTO-04 — autoplay pauses while hovered', async () => {
+      await spot(ss.section());
       const delay = (await ss.swiperState())?.autoplayDelay ?? 3000;
 
       await ss.section().hover();
@@ -549,6 +563,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-AUTO-05 — autoplay resumes after the pointer leaves', async () => {
+      await spot(ss.section());
       const delay = (await ss.swiperState())?.autoplayDelay ?? 3000;
 
       await ss.section().hover();
@@ -567,6 +582,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-AUTO-06 — autoplay pauses on keyboard focus', async () => {
+      await spot(ss.activeSlide());
       const delay = (await ss.swiperState())?.autoplayDelay ?? 3000;
 
       const focusable = ss.activeSlide().locator('a, button').first();
@@ -703,6 +719,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-TOUCH-04 — vertical page scroll still works', async ({ page }) => {
+      await spot(ss.section());
       await page.evaluate(() => window.scrollTo(0, 0));
       const box = await ss.section().boundingBox();
       const x = box!.x + box!.width / 2;
@@ -740,6 +757,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-LAYOUT-03 — slide elements do not overlap', async () => {
+      await spot(ss.activeTextBlocks());
       const blocks = ss.activeTextBlocks();
       const ctas = ss.activeSlide().locator('a.btn');
 
@@ -776,6 +794,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-LAYOUT-10 — button labels are centred inside their button', async () => {
+      await spot(ss.activeCtas());
       const ctas = ss.activeCtas();
       const count = await ctas.count();
       test.skip(count === 0, 'The active slide has no buttons.');
@@ -804,6 +823,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-LAYOUT-11 — slide text does not break or clip', async ({ page }) => {
+      await spot(ss.activeTextBlocks());
       const check = async (width: number) => {
         await page.setViewportSize({ width, height: 900 });
         await page.waitForTimeout(500);
@@ -844,6 +864,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-LAYOUT-09 — layout intact across the viewport matrix', async ({ page }) => {
+      await spot(ss.section());
       const broken: string[] = [];
       for (const width of [1440, 1280, 810, 390]) {
         await page.setViewportSize({ width, height: 900 });
@@ -867,6 +888,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-LAYOUT-06 — slide height settings are respected', async ({ page }) => {
+      await spot(ss.slideAt(0));
       const settings = await ss.heightSettings();
       test.skip(
         !settings.desktop && !settings.mobile,
@@ -932,6 +954,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-LAYOUT-05 — breakpoint boundaries behave', async ({ page }) => {
+      await spot(ss.section());
       const results: string[] = [];
       // Widths set by the team. Note these are standard layout widths
       // rather than boundary PAIRS: the original 767/768 and 1023/1024
@@ -991,6 +1014,7 @@ test.describe('Slideshow', () => {
   test.describe('Media', () => {
 
     test('SS-MEDIA-01 — each slide has a distinct image', async () => {
+      await spot(ss.images());
       const sources = await ss.images().evaluateAll((imgs) =>
         imgs.map((i) => (i.getAttribute('src') ?? '').split('?')[0])
       );
@@ -1006,6 +1030,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-MEDIA-02 — images have intrinsic dimensions', async () => {
+      await spot(ss.images());
       const missing = await ss.images().evaluateAll((imgs) =>
         imgs
           .filter(
@@ -1025,6 +1050,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-MEDIA-03 — first slide image is not lazy-loaded', async () => {
+      await spot(ss.images());
       const first = ss.images().first();
       test.skip((await ss.images().count()) === 0, 'This slideshow uses no images.');
 
@@ -1048,6 +1074,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-MEDIA-04 — off-screen slide images are lazy-loaded', async () => {
+      await spot(ss.slides());
       const eager = await ss.slides().evaluateAll((slides) =>
         slides
           .filter((s) => !s.classList.contains('swiper-slide-active'))
@@ -1093,6 +1120,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-LINK-02 — button links resolve', async ({ page, preset }) => {
+      await spot(ss.ctas());
       const ctas = ss.ctas();
       const count = await ctas.count();
       test.skip(count === 0, 'This slideshow has no CTA buttons configured.');
@@ -1131,6 +1159,7 @@ test.describe('Slideshow', () => {
   test.describe('Accessibility', () => {
 
     test('SS-A11Y-01 — region has an accessible name', async () => {
+      await spot(ss.section());
       const section = ss.section();
       const name =
         (await section.getAttribute('aria-label')) ??
@@ -1147,6 +1176,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-A11Y-02 — arrows have accessible names', async () => {
+      await spot(ss.nextArrow());
       const hasNext = await ss.hasNextArrow();
       const hasPrev = await ss.hasPrevArrow();
       test.skip(!hasNext && !hasPrev, 'This preset renders no arrow controls.');
@@ -1163,6 +1193,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-A11Y-03 — off-screen slides hidden from assistive tech', async () => {
+      await spot(ss.slides());
       const exposed = await ss.slides().evaluateAll((slides) =>
         slides
           .filter((s) => !s.classList.contains('swiper-slide-active'))
@@ -1179,6 +1210,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-A11Y-04 — active slide is NOT hidden', async () => {
+      await spot(ss.activeSlide());
       const hidden = await ss.activeSlide().getAttribute('aria-hidden');
       expect(
         hidden,
@@ -1188,6 +1220,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-A11Y-05 — no keyboard trap', async ({ page }) => {
+      await spot(ss.section());
       // Start inside the slideshow, then Tab out. Focus must eventually
       // leave the section rather than cycling inside it forever.
       const firstFocusable = ss.section().locator('a, button').first();
@@ -1217,6 +1250,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-A11Y-06 — arrows and dots have a visible focus indicator', async () => {
+      await spot(ss.nextArrow());
       const controls: { label: string; locator: ReturnType<typeof ss.nextArrow> }[] = [];
       if (await ss.hasNextArrow()) controls.push({ label: 'next arrow', locator: ss.nextArrow() });
       if (await ss.hasPrevArrow()) controls.push({ label: 'prev arrow', locator: ss.prevArrow() });
@@ -1271,6 +1305,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-A11Y-13 — controls are big enough to tap', async () => {
+      await spot(ss.nextArrow());
       const MIN = 44; // Apple HIG / WCAG 2.5.5 AAA. WCAG 2.2 AA asks 24.
       const controls: { label: string; locator: ReturnType<typeof ss.nextArrow> }[] = [];
       if (await ss.hasNextArrow()) controls.push({ label: 'next arrow', locator: ss.nextArrow() });
@@ -1301,6 +1336,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-A11Y-14 — pagination dots are keyboard-operable', async () => {
+      await spot(ss.bullets());
       test.skip(!(await ss.hasBullets()), 'This preset renders no pagination dots.');
       const count = await ss.bullets().count();
       test.skip(count < 2, 'Needs at least two dots to move between.');
@@ -1364,6 +1400,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-A11Y-09 — prefers-reduced-motion is respected', async ({ page }) => {
+      await spot(ss.nextArrow());
       test.skip(!(await ss.hasNextArrow()), 'Needs arrow controls to trigger a transition.');
 
       await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -1438,6 +1475,7 @@ test.describe('Slideshow', () => {
   test.describe('Hover states', () => {
 
     test('SS-HOVER-01 — CTA buttons react to hover', async () => {
+      await spot(ss.ctas());
       const ctas = ss.ctas();
       const count = await ctas.count();
       test.skip(count === 0, 'This slideshow has no CTA buttons.');
@@ -1463,6 +1501,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-HOVER-02 — carousel arrows react to hover', async () => {
+      await spot(ss.nextArrow());
       const controls: { label: string; locator: ReturnType<typeof ss.nextArrow> }[] = [];
       if (await ss.hasNextArrow()) controls.push({ label: 'next arrow', locator: ss.nextArrow() });
       if (await ss.hasPrevArrow()) controls.push({ label: 'prev arrow', locator: ss.prevArrow() });
@@ -1484,6 +1523,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-HOVER-03 — pagination dots react to hover', async () => {
+      await spot(ss.bullets());
       test.skip(!(await ss.hasBullets()), 'This preset renders no pagination dots.');
 
       // Use an INACTIVE dot: the active one already carries its own
@@ -1506,6 +1546,7 @@ test.describe('Slideshow', () => {
     });
 
     test('SS-HOVER-04 — hovering a CTA does not shift the layout', async ({ page }) => {
+      await spot(ss.ctas());
       const cta = ss.ctas().first();
       test.skip((await ss.ctas().count()) === 0, 'This slideshow has no CTA buttons.');
 
@@ -1544,6 +1585,7 @@ test.describe('Slideshow', () => {
   test.describe('Visual', () => {
 
     test('SS-UI-01 — slideshow matches its visual baseline', async ({ page }) => {
+      await spot(ss.section());
       // Baselines are captured at a fixed viewport. A headed/maximized run
       // uses `viewport: null`, so the window size depends on the screen and
       // no baseline could ever match — skip rather than report a false
@@ -1599,6 +1641,7 @@ test.describe('Slideshow', () => {
   test.describe('Negative', () => {
 
     test('SS-NEG-12 — degrades gracefully when the section JS is blocked', async ({ page, preset }) => {
+      await spot(ss.section());
       await page.route('**/*slideshow*.js', (route) => route.abort());
       await page.goto(preset.url, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(2000);

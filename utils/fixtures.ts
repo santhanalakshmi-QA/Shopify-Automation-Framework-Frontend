@@ -19,6 +19,7 @@ import { test as base, expect } from '@playwright/test';
 import { getPreset } from './presets.js';
 import { HeaderPage } from '../pages/HeaderPage.js';
 import { SlideshowPage } from '../pages/SlideshowPage.js';
+import { flashVerdict } from './demo-hud.js';
 
 /** Shape of one entry in data/presets.json, after env resolution. */
 export interface Preset {
@@ -34,6 +35,33 @@ export interface Preset {
   logo: {
     /** Expected asset extension, e.g. ".png". null = not asserted. */
     expectedFormat: string | null;
+  };
+  /** Per-section capability blocks, added as each section is built. */
+  collectionList?: {
+    cards: number;
+    heading: boolean;
+    itemCounts: boolean;
+    arrows: boolean;
+    loop: boolean;
+    autoplay: boolean;
+  };
+  testimonial?: {
+    /** One entry per section — dense ships two that differ. */
+    sections: Array<{
+      cards: number;
+      rating: boolean;
+      image: boolean;
+      secondaryText: boolean;
+    }>;
+    heading: boolean;
+    arrows: boolean;
+    loop: boolean;
+    autoplay: boolean;
+  };
+  richText?: {
+    copyCode: boolean;
+    heading: boolean;
+    links: boolean;
   };
   features: {
     megaMenu: boolean;
@@ -57,6 +85,8 @@ export interface Preset {
 
 interface PresetFixtures {
   preset: Preset;
+  /** Auto fixture: paints the pass/fail verdict on screen in demo mode. */
+  verdict: void;
   headerPage: HeaderPage;
   slideshowPage: SlideshowPage;
 }
@@ -82,6 +112,26 @@ export const test = base.extend<PresetFixtures>({
   slideshowPage: async ({ page, preset }, use) => {
     await use(new SlideshowPage(page, preset));
   },
+
+  /**
+   * Automatic, demo-only: once the test result is known, re-highlight
+   * whatever the check last inspected — GREEN if it passed, RED if it
+   * did not — and save a proof screenshot.
+   *
+   * Runs for every test without the spec asking for it, so any check
+   * that highlights anything ends with a visible verdict rather than
+   * only a tick in the terminal. No-op outside demo mode.
+   */
+  verdict: [
+    // Depends on `page` deliberately: Playwright tears fixtures down in
+    // reverse order, so without this dependency the page is already
+    // closed by the time the verdict runs and nothing is painted.
+    async ({ page }, use, testInfo) => {
+      await use(undefined);
+      if (!page.isClosed()) await flashVerdict(testInfo.status === 'passed');
+    },
+    { auto: true },
+  ],
 });
 
 /**

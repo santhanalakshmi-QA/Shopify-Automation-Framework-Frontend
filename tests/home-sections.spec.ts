@@ -13,12 +13,18 @@
 // ─────────────────────────────────────────────────────────────
 
 import { test, expect } from '../utils/fixtures';
+import { mountNarrator, spot } from '../utils/demo-hud.js';
 import { HomePage } from '../pages/HomePage.js';
 
 test.describe('Home page — section manifest', () => {
   let home: HomePage;
 
-  test.beforeEach(async ({ page, preset }) => {
+  test.beforeEach(async ({ page, preset }, testInfo) => {
+    await mountNarrator(page, {
+      title: testInfo.title,
+      preset: preset.key,
+      spotlight: '[id^="shopify-section-"]',
+    });
     home = new HomePage(page, preset);
     await home.open();
   });

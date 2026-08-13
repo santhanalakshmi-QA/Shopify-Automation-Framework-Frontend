@@ -78,6 +78,29 @@ function inapplicableChecks(preset: any, viewportSuffix: string): RegExp[] {
   const isTouch = viewportSuffix === 'mobile' || viewportSuffix === 'tablet';
   const excluded: RegExp[] = [];
 
+  // ── Testimonials ───────────────────────────────────────────
+  const tsCaps = preset.testimonial;
+  if (!(preset.sections?.testimonial > 0)) excluded.push(/^TS-/, /TS-[A-Z]/);
+  const tsSections = tsCaps?.sections ?? [];
+  // Gate on whether ANY section has the feature; the spec then checks
+  // each section against its own declared expectation.
+  if (!tsSections.some((s: any) => s.secondaryText)) excluded.push(/TS-CONTENT-02/);
+  if (!tsSections.some((s: any) => s.image)) excluded.push(/TS-MEDIA-0/);
+  if (!tsSections.some((s: any) => s.rating)) excluded.push(/TS-RATING-/);
+  if (!tsCaps?.heading) excluded.push(/TS-CONTENT-04/);
+  // moonlight is the only preset that renders arrows on this section.
+  if (!tsCaps?.arrows) excluded.push(/TS-NAV-/);
+
+  // ── Collection list ────────────────────────────────────────
+  const cl = preset.collectionList;
+  if (!(preset.sections?.collection_list > 0)) excluded.push(/^CL-/, /CL-[A-Z]/);
+  // doll renders arrows but hides them: 4 cards at 4-per-view has
+  // nothing to scroll to.
+  if (!cl?.arrows) excluded.push(/CL-NAV-/);
+  if (!cl?.autoplay) excluded.push(/CL-AUTO-/);
+  if (!cl?.heading) excluded.push(/CL-CONTENT-04/);
+  if (!cl?.itemCounts) excluded.push(/CL-CONTENT-05/);
+
   // ── Rich text ──────────────────────────────────────────────
   // A preset with no rich_text section skips the whole suite rather
   // than collecting it and reporting a wall of skips. The spec keeps

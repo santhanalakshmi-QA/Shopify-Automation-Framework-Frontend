@@ -64,6 +64,28 @@
         "copyCode": true,
         "heading": false,
         "links": false
+      },
+      "collectionList": {
+        "cards": 10,
+        "heading": false,
+        "itemCounts": true,
+        "arrows": true,
+        "loop": true,
+        "autoplay": true
+      },
+      "testimonial": {
+        "sections": [
+          {
+            "cards": 7,
+            "rating": true,
+            "image": true,
+            "secondaryText": false
+          }
+        ],
+        "heading": true,
+        "arrows": false,
+        "loop": true,
+        "autoplay": false
       }
     },
     {
@@ -113,6 +135,28 @@
         "slideLinks": true,
         "autoplay": false,
         "loop": true
+      },
+      "collectionList": {
+        "cards": 4,
+        "heading": true,
+        "itemCounts": false,
+        "arrows": false,
+        "loop": false,
+        "autoplay": false
+      },
+      "testimonial": {
+        "sections": [
+          {
+            "cards": 3,
+            "rating": true,
+            "image": true,
+            "secondaryText": true
+          }
+        ],
+        "heading": true,
+        "arrows": false,
+        "loop": true,
+        "autoplay": false
       }
     },
     {
@@ -162,6 +206,26 @@
         "slideLinks": true,
         "autoplay": false,
         "loop": true
+      },
+      "testimonial": {
+        "sections": [
+          {
+            "cards": 4,
+            "rating": true,
+            "image": true,
+            "secondaryText": true
+          },
+          {
+            "cards": 4,
+            "rating": false,
+            "image": false,
+            "secondaryText": true
+          }
+        ],
+        "heading": true,
+        "arrows": false,
+        "loop": true,
+        "autoplay": false
       }
     },
     {
@@ -210,6 +274,20 @@
         "slideLinks": false,
         "autoplay": false,
         "loop": true
+      },
+      "testimonial": {
+        "sections": [
+          {
+            "cards": 6,
+            "rating": true,
+            "image": true,
+            "secondaryText": true
+          }
+        ],
+        "heading": true,
+        "arrows": true,
+        "loop": true,
+        "autoplay": false
       }
     }
   ]

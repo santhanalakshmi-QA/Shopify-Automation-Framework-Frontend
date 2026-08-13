@@ -10,6 +10,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { expect } from '@playwright/test';
+import { spot } from './demo-hud.js';
 
 // Every assertion below takes an options object carrying `prefix`, so the
 // same helper serves any section suite: the slideshow passes "SS", a
@@ -40,6 +41,7 @@ export function checksFor(prefix = DEFAULT_PREFIX) {
 // A collapsed slide still passes toBeVisible(); this is the check
 // that catches it.
 export async function assertRenderHealth(items, { minHeight = 40, requireImages = false, prefix = DEFAULT_PREFIX } = {}) {
+  await spot(items);
   const count = await items.count();
 
   for (let i = 0; i < count; i++) {
@@ -90,12 +92,23 @@ export async function expectNoMissingTranslations(scope, { prefix = DEFAULT_PREF
 
 // ── <PREFIX>-LINK-01 / 03 / 04 — dead and unsafe anchors ───────────
 export async function assertNoDeadOrUnsafeLinks(scope, { prefix = DEFAULT_PREFIX } = {}) {
+  await spot(scope.locator('a'));
   const anchors = await scope.locator('a').evaluateAll((els) =>
     els.map((a) => ({
       href: a.getAttribute('href'),
       target: a.getAttribute('target'),
       rel: a.getAttribute('rel') ?? '',
       text: (a.textContent ?? '').trim().slice(0, 40),
+      // An image link is NOT an empty shell: a screen reader announces
+      // the image's alt text. Checking textContent alone flagged every
+      // picture link on the collection list as unlabelled.
+      ariaLabel: (a.getAttribute('aria-label') ?? '').trim(),
+      title: (a.getAttribute('title') ?? '').trim(),
+      imgAlt: [...a.querySelectorAll('img')]
+        .map((i) => (i.getAttribute('alt') ?? '').trim())
+        .filter(Boolean)
+        .join(' ')
+        .slice(0, 40),
       w: Math.round(a.getBoundingClientRect().width),
       h: Math.round(a.getBoundingClientRect().height),
     }))
@@ -122,13 +135,19 @@ export async function assertNoDeadOrUnsafeLinks(scope, { prefix = DEFAULT_PREFIX
       `\nThe opened page gets a window.opener reference back to your store.`
   ).toEqual([]);
 
-  // <PREFIX>-LINK-04 — rendered but empty button shells.
-  const shells = anchors.filter((a) => a.text === '' && a.w > 0 && a.h > 0);
+  // <PREFIX>-LINK-04 — rendered but genuinely unlabelled boxes.
+  // "Labelled" means any of: visible text, aria-label, title, or an
+  // image with alt text — all four are announced by a screen reader.
+  const shells = anchors.filter(
+    (a) => a.w > 0 && a.h > 0 && !a.text && !a.ariaLabel && !a.title && !a.imgAlt
+  );
   expect(
     shells,
-    `${prefix}-LINK-04 / empty-shell: ${shells.length} anchor(s) render a visible box with no text:\n` +
+    `${prefix}-LINK-04 / empty-shell: ${shells.length} anchor(s) render a visible box with ` +
+      `no text, no aria-label, no title and no image alt:\n` +
       shells.map((a) => `  ${a.w}x${a.h}px → ${a.href}`).join('\n') +
-      `\nAn invisible clickable box sits over the slide and also receives keyboard focus.`
+      `\nA clickable box with nothing to announce reads as "link" to a screen reader, and ` +
+      `receives keyboard focus for no apparent reason.`
   ).toEqual([]);
 }
 
@@ -149,6 +168,7 @@ export async function assertNoPageOverflow(page, { tolerance = 2, prefix = DEFAU
 
 // ── <PREFIX>-LAYOUT-02 — children escaping their container ─────────
 export async function assertContentInsideBox(container, children, { tolerance = 2, prefix = DEFAULT_PREFIX } = {}) {
+  await spot(children);
   const outer = await container.boundingBox();
   if (!outer) return;
 
