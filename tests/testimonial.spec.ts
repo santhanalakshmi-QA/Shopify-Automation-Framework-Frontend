@@ -39,7 +39,7 @@ import { checksFor } from '../utils/slideshow-checks.js';
 const SECTION = 'testimonial';
 
 const { assertRenderHealth, expectNoMissingTranslations, assertNoDeadOrUnsafeLinks,
-        assertNoPageOverflow } = checksFor('TS');
+        assertNoPageOverflow, expectNoPlaceholderText } = checksFor('TS');
 
 test.describe('Testimonials', () => {
   let ts: TestimonialPage;
@@ -111,6 +111,12 @@ test.describe('Testimonials', () => {
     test('TS-RENDER-04 — no missing translation keys', async () => {
       await spot(ts.section());
       await expectNoMissingTranslations(ts.section());
+    });
+
+    test('TS-CONTENT-05 — no theme placeholder text is left on the page', async ({ preset }) => {
+      await eachSection(preset, async (i) => {
+        await expectNoPlaceholderText(ts.section(i));
+      });
     });
 
     test('TS-RENDER-05 — no JS errors on init', async ({ page }) => {

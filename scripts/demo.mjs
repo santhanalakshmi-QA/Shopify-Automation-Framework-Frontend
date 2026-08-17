@@ -17,7 +17,11 @@ import { spawn } from 'node:child_process';
 const argv = process.argv.slice(2);
 
 // First bare word is the spec to demo; everything else is a flag.
+// "all" runs every spec — useful for a full watched pass, though at
+// one worker and a deliberate slowmo that is a long sit. Narrow it
+// with --project and --grep unless you really mean all of it.
 const spec = argv.find((a) => !a.startsWith('-')) ?? 'slideshow';
+const ALL = spec === 'all' || spec === '*';
 
 function flag(name, fallback = null) {
   const i = argv.indexOf(`--${name}`);
@@ -51,7 +55,7 @@ const grep = flag('grep') ?? flag('g');
 
 const args = [
   'playwright', 'test',
-  `${spec}.spec.ts`,
+  ...(ALL ? [] : [`${spec}.spec.ts`]),
   '--headed',
   '--workers=1',
   '--retries=0',
@@ -59,7 +63,7 @@ const args = [
   ...(grep ? ['-g', JSON.stringify(grep)] : []),
 ];
 
-console.log(`\n▶  Demo: ${spec}.spec.ts`);
+console.log(`\n▶  Demo: ${ALL ? 'ALL specs' : `${spec}.spec.ts`}`);
 console.log(`   projects : ${chosen.join(', ')}`);
 console.log(`   slow-mo  : ${slowmo === '0' ? 'off' : `${slowmo}ms per action`}`);
 console.log(`   filter   : ${grep ? grep : 'none — running the whole section'}`);

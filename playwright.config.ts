@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { defineConfig, devices } from '@playwright/test';
 import os from 'node:os';
 import { activePresets, authFile } from './utils/presets.js';
+import { SIMPLE_SECTIONS } from './utils/simple-sections.js';
 
 // Playwright transpiles this config to CommonJS, so `require` is available
 // at runtime. Read the installed Playwright version for the Allure
@@ -77,6 +78,111 @@ function inapplicableChecks(preset: any, viewportSuffix: string): RegExp[] {
   const caps = preset.slideshow ?? {};
   const isTouch = viewportSuffix === 'mobile' || viewportSuffix === 'tablet';
   const excluded: RegExp[] = [];
+
+  // ── Simple sections (11 types, one shared spec) ────────────
+  // Registry-driven: a preset that does not ship a section never
+  // collects its checks, and adding a twelfth section needs no edit
+  // here at all.
+  for (const s of SIMPLE_SECTIONS) {
+    if (!(preset.sections?.[s.type] > 0)) {
+      excluded.push(new RegExp(`^${s.prefix}-`), new RegExp(`${s.prefix}-[A-Z]`));
+      continue;
+    }
+    const declared = preset.simpleSections?.[s.type] ?? [];
+    if (!declared.some((d: any) => d.images)) excluded.push(new RegExp(`${s.prefix}-MEDIA-`));
+    if (!declared.some((d: any) => d.links))  excluded.push(new RegExp(`${s.prefix}-LINK-`));
+    if (!s.item) excluded.push(new RegExp(`${s.prefix}-RENDER-02`), new RegExp(`${s.prefix}-LAYOUT-02`));
+    // LAYOUT-03 walks every breakpoint itself; collect it once.
+    if (isTouch) excluded.push(new RegExp(`${s.prefix}-LAYOUT-03`));
+  }
+
+  // ── Comparison sliders ─────────────────────────────────────
+  if (!(preset.sections?.image_comparison > 0)) excluded.push(/^IC-/, /IC-[A-Z]/);
+  if (!(preset.sections?.before_after > 0)) excluded.push(/^BA-/, /BA-[A-Z]/);
+  if (isTouch) excluded.push(/IC-LAYOUT-02/, /BA-LAYOUT-02/);
+
+  // ── Video sections ─────────────────────────────────────────
+  if (!(preset.sections?.video_banner > 0)) excluded.push(/^VB-/, /VB-[A-Z]/);
+  if (!(preset.sections?.shoppable_video > 0)) excluded.push(/^SV-/, /SV-[A-Z]/);
+  if (isTouch) excluded.push(/VB-LAYOUT-02/);
+
+  // ── Featured collection ────────────────────────────────────
+  if (!(preset.sections?.featured_collection > 0)) excluded.push(/^FC-/, /FC-[A-Z]/);
+  if (isTouch) excluded.push(/FC-LAYOUT-03/);
+
+  // ── FAQ with tabs (separate section from plain FAQ) ────────
+  if (!(preset.sections?.faq_with_tabs > 0)) excluded.push(/^FAQT-/, /FAQT-[A-Z]/);
+  if (isTouch) excluded.push(/FAQT-LAYOUT-03/);
+
+  // ── FAQ ────────────────────────────────────────────────────
+  if (!(preset.sections?.faq > 0)) excluded.push(/^FAQ-/, /FAQ-[A-Z]/);
+  if (!preset.faq?.oneAtATime) excluded.push(/FAQ-ACC-04/);
+  if (!preset.faq?.cta) excluded.push(/FAQ-CTA-/);
+  if (!preset.faq?.stickyColumn) excluded.push(/FAQ-STICKY-/);
+  // Alignment and stickiness are desktop-layout concerns: below the
+  // breakpoint the two columns stack and neither question applies.
+  if (isTouch) excluded.push(/FAQ-CTA-03/, /FAQ-STICKY-/);
+  // LAYOUT-03 walks every breakpoint itself.
+  if (isTouch) excluded.push(/FAQ-LAYOUT-03/);
+
+  // ── Footer ─────────────────────────────────────────────────
+  // Global region like the header, so this gates on the `footer`
+  // capability block rather than on a section count.
+  const ft = preset.footer;
+  if (!ft?.newsletter) excluded.push(/FT-NEWS-/);
+  if (!ft?.social) excluded.push(/FT-SOCIAL-/);
+  if (!ft?.brandLogo) excluded.push(/FT-BRAND-02/);
+  if (!ft?.brandBlocks) excluded.push(/FT-BRAND-01/);
+  if (!ft?.accordion) excluded.push(/FT-ACC-/);
+
+  // FT-ACC-02/03 drive the mobile accordion and set their own
+  // viewport; FT-ACC-01 pins desktop; FT-LAYOUT-03 walks every
+  // breakpoint itself. Collect that group once, on desktop.
+  if (isTouch) excluded.push(/FT-ACC-0[123]/, /FT-LAYOUT-03/);
+
+  // Alignment is a desktop-grid concern: below the breakpoint the
+  // columns stack, so "same top edge" and "equal width" stop meaning
+  // anything. Collect them on desktop only.
+  if (isTouch) excluded.push(/FT-ALIGN-0[123]/);
+  if (!ft?.newsletter) excluded.push(/FT-ALIGN-0[45]/);
+
+  // ── Header ─────────────────────────────────────────────────
+  // Feature gating, same as every section: a preset that has no mega
+  // menu never collects the mega-menu checks.
+  const f = preset.features ?? {};
+  if (!f.megaMenu) excluded.push(/HD-MEGA-/);
+  if (!f.navDepth2) excluded.push(/HD-STRUCT-02/);
+  if (!f.navDepth3) excluded.push(/HD-STRUCT-03/);
+  if (!f.mobileDrawer) excluded.push(/HD-RESP-03/);
+  if (!f.mobileSubmenu) excluded.push(/HD-RESP-04/);
+  if (!f.search) excluded.push(/HD-SEARCH-/, /HD-ICON-01/, /HD-A11Y-03/);
+  if (!f.account) excluded.push(/HD-ICON-02/);
+  if (!f.stickyHeader) excluded.push(/HD-EDGE-01/);
+  if (!preset.nav?.blogLabel) excluded.push(/HD-NAV-04/);
+  if (!preset.logo?.expectedFormat) excluded.push(/HD-ASSET-01/);
+
+  // These header checks set their own viewport (setDesktopView /
+  // setMobileView) the moment they start, so running them in the
+  // tablet and mobile projects repeats identical work — the project
+  // viewport is overwritten before a single assertion runs.
+  // Collect them once, in the desktop project only.
+  //
+  // Saves 22 checks x 2 redundant viewports x 4 presets = 176 runs.
+  // HD-RESP-05 is deliberately NOT here: it walks every breakpoint
+  // itself, which is the whole point of that check.
+  if (isTouch) {
+    excluded.push(
+      /HD-ASSET-03/, /HD-ASSET-04/,
+      /HD-ICON-01/, /HD-ICON-05/,
+      /HD-NAV-0[1234]/,
+      /HD-STRUCT-01/, /HD-STRUCT-04/,
+      /HD-MEGA-0[23]/,
+      /HD-RESP-0[12]/,
+      /HD-SEARCH-0[123]/,
+      /HD-A11Y-0[23]/,
+      /HD-EDGE-0[13]/,
+    );
+  }
 
   // ── Testimonials ───────────────────────────────────────────
   const tsCaps = preset.testimonial;

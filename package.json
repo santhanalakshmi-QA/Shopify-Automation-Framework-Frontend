@@ -27,6 +27,7 @@
     "demo:rich-text": "node scripts/demo.mjs rich-text --project khajal-desktop",
     "demo:collection-list": "node scripts/demo.mjs collection-list --project khajal-desktop --project doll-desktop",
     "demo:testimonial": "node scripts/demo.mjs testimonial",
+    "demo:footer": "node scripts/demo.mjs footer",
     "test:noretry": "playwright test --retries=0",
     "report": "playwright show-report",
     "allure": "allure generate allure-results --clean -o allure-report && allure open allure-report",
@@ -36,7 +37,16 @@
     "allure:generate": "allure generate allure-results --clean -o allure-report",
     "allure:open": "allure open allure-report",
     "allure:report": "allure generate allure-results --clean -o allure-report && allure open allure-report",
-    "allure:clean": "node scripts/allure-clean.mjs"
+    "allure:clean": "node scripts/allure-clean.mjs",
+    "sync:simple": "node scripts/sync-simple-sections.mjs",
+    "test:simple": "playwright test simple-sections.spec.ts",
+    "demo:simple": "node scripts/demo.mjs simple-sections",
+    "demo:faq": "node scripts/demo.mjs faq",
+    "demo:faq-tabs": "node scripts/demo.mjs faq-tabs",
+    "demo:featured": "node scripts/demo.mjs featured-collection",
+    "demo:video": "node scripts/demo.mjs video-sections",
+    "demo:sliders": "node scripts/demo.mjs comparison-sliders",
+    "demo:all": "node scripts/demo.mjs all"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",

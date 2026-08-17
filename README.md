@@ -1,7 +1,20 @@
-<<<<<<< HEAD
-# Khajal Shopify Presets — Playwright Test Suite
+# Selena Theme — Playwright Test Suite
 
-One shared spec set, run against **four preset stores** of the Khajal theme:
+One shared spec set, run against **four preset stores** of the **Selena** theme.
+
+Khajal, Doll, Dense and Moonlight are *presets* of one theme — same code, four
+style configurations. Verified from the live storefronts:
+
+| | |
+|---|---|
+| Theme | Selena (`schema_name`) |
+| Version | 1.0.0 (`schema_version`) |
+| Architecture | Online Store 2.0 |
+| Theme Store | Not published (`theme_store_id: null`) — custom theme |
+
+Not Dawn-derived: none of Dawn's asset files are present, and the theme uses
+Swiper for carousels rather than Dawn's `slider-component`. Dawn conventions do
+not apply here — every locator was written against the live DOM.
 
 | Preset key | Store |
 |---|---|
@@ -247,6 +260,37 @@ any two side by side. The report's **Overview → Trend** chart also plots this 
 against all previous archives automatically, because history is restored before
 each generate. Archives are never overwritten — each run gets its own timestamp.
 
+## Running in CI
+
+`.github/workflows/tests.yml` runs the suite on GitHub Actions. It needs **one
+secret** — without it every store returns the "Opening soon" password page and
+the whole run fails at setup.
+
+**Add it once:**
+
+> Repository → **Settings** → **Secrets and variables** → **Actions** →
+> **New repository secret**
+>
+> | Name | Value |
+> |---|---|
+> | `STOREFRONT_PASSWORD` | the storefront password from Shopify admin |
+
+Find the value in Shopify admin under **Online Store → Preferences → Restrict
+access**. If the presets ever use different passwords, add
+`PRESET_<KEY>_PASSWORD` secrets (e.g. `PRESET_DOLL_PASSWORD`) and wire them into
+the workflow `env:` block — per-preset values win over the shared one.
+
+The workflow checks the secret before running anything and stops with a clear
+error rather than producing 400 confusing failures:
+
+```
+::error::STOREFRONT_PASSWORD secret is not set.
+```
+
+**Rotating the password** costs nothing here: change it in Shopify admin, update
+the one secret, and delete `.auth/` locally so sessions are re-created. Nothing
+else references it — store URLs live in `data/presets.json`, not in CI config.
+
 ## Testing home-page sections
 
 The header is shared markup, so one spec covers it. Home-page **sections are
@@ -422,6 +466,3 @@ Selectors are intentionally permissive so the suite tolerates minor markup
 differences between presets. If one preset diverges, fix it in
 `locators/shopify-locators.js` — every page object reads from that single
 source of truth. No locator is ever written in a spec file.
-=======
-# Shopify-Automation-Framework-Frontend
->>>>>>> cdc231f2625300535bfbe4f6ce20f37acb247507

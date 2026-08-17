@@ -34,6 +34,8 @@ export function checksFor(prefix = DEFAULT_PREFIX) {
     assertNoPageOverflow: (page, opts = {}) => assertNoPageOverflow(page, { ...opts, prefix }),
     assertContentInsideBox: (container, children, opts = {}) =>
       assertContentInsideBox(container, children, { ...opts, prefix }),
+    expectNoPlaceholderText: (scope, opts = {}) =>
+      expectNoPlaceholderText(scope, { ...opts, prefix }),
   };
 }
 
@@ -151,46 +153,165 @@ export async function assertNoDeadOrUnsafeLinks(scope, { prefix = DEFAULT_PREFIX
   ).toEqual([]);
 }
 
+// ── <PREFIX>-CONTENT — theme placeholder text left in production ───
+/**
+ * Every Shopify theme ships default copy in its settings so a section
+ * is not empty in the editor — "Add a short description here.",
+ * "Tell your story", and so on. It is meant to be replaced.
+ *
+ * When it is not, it goes live looking like real content: correctly
+ * styled, correctly placed, and completely meaningless to a shopper.
+ * Nothing errors and nothing looks broken, which is exactly why it
+ * survives — the merchant filled in the heading, missed the subtitle,
+ * and nobody scrolled back to check.
+ *
+ * Deliberately conservative: only strings that are unmistakably an
+ * instruction to the merchant, and only in short text nodes, so real
+ * copy that happens to contain the word "description" is not flagged.
+ */
+const PLACEHOLDER_COPY =
+  /add (a )?(short )?(description|text|heading|title|content)|lorem ipsum|your text here|placeholder text|sample text|edit this text|tell your story|use this text to share/i;
+
+export async function expectNoPlaceholderText(scope, { prefix = DEFAULT_PREFIX } = {}) {
+  await spot(scope);
+
+  const found = await scope.evaluate((el, source) => {
+    const re = new RegExp(source, 'i');
+    const out = [];
+    for (const node of el.querySelectorAll('*')) {
+      if (node.children.length) continue;          // leaf text only
+      const text = (node.textContent ?? '').trim();
+      if (!text || text.length > 90) continue;     // real copy is longer
+      if (re.test(text)) {
+        out.push(`<${node.tagName.toLowerCase()}> "${text.slice(0, 60)}"`);
+      }
+    }
+    return [...new Set(out)];
+  }, PLACEHOLDER_COPY.source);
+
+  expect(
+    found,
+    `${prefix}-CONTENT / placeholder-copy: the theme's own default text is still on the ` +
+      `live page:\n  ${found.join('\n  ')}\n` +
+      `This is the prompt Shopify shows a merchant in the theme editor, not content. It ` +
+      `renders to shoppers in the right font, in the right place, saying nothing.`
+  ).toEqual([]);
+}
+
 // ── <PREFIX>-LAYOUT-01 — page-level horizontal overflow ────────────
+/**
+ * This one is PAGE-level, so it fails in every section suite at once
+ * whenever any single section blows the page out sideways. That makes
+ * it easy to misread as "the section under test is broken".
+ *
+ * So when it fails it also names the widest offending element and
+ * which section owns it — enough for a defect report to land on the
+ * right team's desk rather than on whoever's suite happened to run.
+ */
 export async function assertNoPageOverflow(page, { tolerance = 2, prefix = DEFAULT_PREFIX } = {}) {
-  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
+  const { scrollWidth, clientWidth, culprits } = await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    const scrollWidth = document.documentElement.scrollWidth;
+
+    const culprits =
+      scrollWidth - clientWidth <= 2
+        ? []
+        : [...document.querySelectorAll('body *')]
+            .map((el) => ({ el, r: el.getBoundingClientRect() }))
+            .filter(({ r }) => r.right > clientWidth + 2 && r.width > 40)
+            .sort((a, b) => b.r.right - a.r.right)
+            .slice(0, 3)
+            .map(({ el, r }) => {
+              const section = el.closest('[id^="shopify-section-"]');
+              const type = section?.id.match(/__(.+?)_[A-Za-z0-9]{5,}$/)?.[1] ?? null;
+              const cls = String(el.className).trim().split(/\s+/).slice(0, 2).join('.');
+              return `${el.tagName.toLowerCase()}${cls ? '.' + cls : ''} reaches ${Math.round(r.right)}px` +
+                (type ? `  (owned by the "${type}" section)` : '');
+            });
+
+    return { scrollWidth, clientWidth, culprits };
+  });
 
   expect(
     scrollWidth - clientWidth,
-    `${prefix}-LAYOUT-01 / page-blowout: document scrollWidth is ${scrollWidth}px against a ` +
-      `${clientWidth}px viewport (+${scrollWidth - clientWidth}px). ` +
-      `Usually a full-bleed slide missing overflow:hidden, or a negative margin.`
+    `${prefix}-LAYOUT-01 / page-blowout: the page renders ${scrollWidth}px wide inside a ` +
+      `${clientWidth}px window (+${scrollWidth - clientWidth}px), so it can be dragged ` +
+      `sideways into empty space.\n` +
+      `Widest offender(s):\n  ${culprits.join('\n  ')}\n` +
+      `NOTE: this is a PAGE-level measurement. If the section named above is not the one ` +
+      `this suite covers, the defect belongs to that section — this check simply notices ` +
+      `it first. Usually a full-bleed slide or marquee track missing overflow:hidden.`
   ).toBeLessThanOrEqual(tolerance);
 }
 
 // ── <PREFIX>-LAYOUT-02 — children escaping their container ─────────
-export async function assertContentInsideBox(container, children, { tolerance = 2, prefix = DEFAULT_PREFIX } = {}) {
+/**
+ * `onlyInView` exists because of carousels.
+ *
+ * In a Swiper track every slide is laid out on one long strip, so the
+ * slides that are NOT currently showing sit far outside the visible
+ * container by design — hundreds of pixels out. Measuring them against
+ * the container reports a spill that no shopper can ever see, and does
+ * it on every carousel-backed section at once.
+ *
+ * With `onlyInView`, a child is measured only when it actually overlaps
+ * the container's visible box. That keeps the check meaningful — content
+ * escaping the frame you can see is still caught — without inventing
+ * failures for content parked off-stage.
+ */
+export async function assertContentInsideBox(container, children, { tolerance = 2, onlyInView = false, prefix = DEFAULT_PREFIX } = {}) {
   await spot(children);
   const outer = await container.boundingBox();
   if (!outer) return;
 
-  const count = await children.count();
-  for (let i = 0; i < count; i++) {
-    const child = children.nth(i);
-    if (!(await child.isVisible())) continue;
+  // Measured in one pass in the browser so each child can be judged
+  // against its own ancestor chain, not just the outer box.
+  const offenders = await children.evaluateAll(
+    (els, { outer, tolerance, onlyInView }) =>
+      els
+        .map((el, i) => {
+          const box = el.getBoundingClientRect();
+          if (!box.width || !box.height) return null;
+          // Parity with the previous Playwright isVisible() gate: an
+          // element hidden by `visibility` still has a box, and it was
+          // never measured before. Keep it that way.
+          if (getComputedStyle(el).visibility === 'hidden') return null;
 
-    const box = await child.boundingBox();
-    if (!box) continue;
+          if (onlyInView) {
+            // 1. Off-stage carousel slide — parked outside the frame on
+            //    purpose, and no shopper can see it there.
+            const overlaps = box.left < outer.x + outer.width && box.right > outer.x;
+            if (!overlaps) return null;
 
-    const overhangRight = box.x + box.width - (outer.x + outer.width);
-    const overhangLeft = outer.x - box.x;
-    const label = (await child.innerText().catch(() => '')).trim().slice(0, 30) || `child[${i}]`;
+            // 2. Clipped by an ancestor. The marquee strip, the logo
+            //    carousel and the banner track all run content past
+            //    their edge deliberately, with overflow:hidden doing
+            //    its job. A spill nobody can see is not a defect — and
+            //    if it ever forces the PAGE sideways, LAYOUT-01 has it.
+            for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+              const o = getComputedStyle(n).overflowX;
+              if (o === 'hidden' || o === 'clip' || o === 'auto' || o === 'scroll') return null;
+            }
+          }
 
-    expect(
-      Math.max(overhangRight, overhangLeft),
-      `${prefix}-LAYOUT-02 / parent-escape: "${label}" extends ` +
-        `${Math.round(Math.max(overhangRight, overhangLeft))}px past the edge of its ` +
-        `slide container. At this viewport the content is cut off or overlapping.`
-    ).toBeLessThanOrEqual(tolerance);
-  }
+          const overhang = Math.max(
+            box.right - (outer.x + outer.width),
+            outer.x - box.left
+          );
+          if (overhang <= tolerance) return null;
+
+          const label = (el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 30) || `child[${i}]`;
+          return { label, overhang: Math.round(overhang) };
+        })
+        .filter(Boolean),
+    { outer, tolerance, onlyInView }
+  );
+
+  expect(
+    offenders.map((o) => `"${o.label}" +${o.overhang}px`),
+    `${prefix}-LAYOUT-02 / parent-escape: content extends past the edge of its container ` +
+      `and is NOT clipped, so it is visibly cut off or overlapping at this viewport.`
+  ).toEqual([]);
 }
 
 export default {

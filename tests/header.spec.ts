@@ -50,23 +50,23 @@ test.describe('Shopify Header', () => {
   // ===========================================================
   test.describe('Store name / logo', () => {
 
-    test('logo is displayed in the header', async () => {
+    test('HD-LOGO-01 — logo is displayed in the header', async () => {
       await spot(header.logoLink());
       await expect(header.logoLink()).toBeVisible();
       await expect(header.logoImage()).toBeVisible();
     });
 
-    test('logo links back to the home page', async () => {
+    test('HD-LOGO-02 — logo links back to the home page', async () => {
       await spot(header.logoLink());
       await expect(header.logoLink()).toHaveAttribute('href', '/');
     });
 
-    test('logo image is fully loaded (naturalWidth > 0)', async () => {
+    test('HD-LOGO-03 — logo image is fully loaded (naturalWidth > 0)', async () => {
       await spot(header.logoImage());
       await expectImageLoaded(header.logoImage());
     });
 
-    test('logo exposes accessible fallback text (alt / accessible name)', async () => {
+    test('HD-LOGO-04 — logo exposes accessible fallback text (alt / accessible name)', async () => {
       await spot(header.logoImage());
       // The alt attribute is the store-name fallback shown if the image
       // fails to load and is what assistive tech announces.
@@ -75,7 +75,7 @@ test.describe('Shopify Header', () => {
       expect((alt ?? '').trim().length).toBeGreaterThan(0);
     });
 
-    test('logo link has a non-empty accessible name', async () => {
+    test('HD-LOGO-05 — logo link has a non-empty accessible name', async () => {
       await spot(header.logoLink());
       const link = header.logoLink();
       const name =
@@ -85,7 +85,7 @@ test.describe('Shopify Header', () => {
       expect((name ?? '').trim().length).toBeGreaterThan(0);
     });
 
-    test('boundary: long spaceless store name (30–40 chars) does not break header layout', async ({ page }) => {
+    test('HD-LOGO-06 — boundary: long spaceless store name (30–40 chars) does not break header layout', async ({ page }) => {
       await spot(header.logoImage());
       // The store name cannot be changed from a test, so simulate the
       // boundary by swapping the logo's fallback text to a 35-char
@@ -111,7 +111,7 @@ test.describe('Shopify Header', () => {
   // ===========================================================
   test.describe('Logo asset quality', () => {
 
-    test('logo is served in the format the preset expects (transparent background)', async ({ preset }) => {
+    test('HD-ASSET-01 — logo is served in the format the preset expects (transparent background)', async ({ preset }) => {
       const expected = preset.logo.expectedFormat;
       test.skip(
         !expected,
@@ -120,7 +120,7 @@ test.describe('Shopify Header', () => {
       expect(await header.logoFormat()).toBe(expected);
     });
 
-    test('logo preserves its intrinsic aspect ratio when rendered', async () => {
+    test('HD-ASSET-02 — logo preserves its intrinsic aspect ratio when rendered', async () => {
       await spot(header.logoImage());
       const img = header.logoImage();
       const box = await img.boundingBox();
@@ -139,7 +139,7 @@ test.describe('Shopify Header', () => {
       expect(Math.abs(renderedRatio - intrinsicRatio)).toBeLessThan(0.1);
     });
 
-    test('logo scales within the header across mobile and desktop', async ({ page }) => {
+    test('HD-ASSET-03 — logo scales within the header across mobile and desktop', async ({ page }) => {
       await spot(header.logoImage());
       await header.setMobileView();
       await expect(header.logoImage()).toBeVisible({ timeout: 15000 });
@@ -156,7 +156,7 @@ test.describe('Shopify Header', () => {
       expect(desktopBox!.width).toBeLessThanOrEqual(headerBox!.width + 1);
     });
 
-    test('logo is positioned inside the header bounds (alignment)', async () => {
+    test('HD-ASSET-04 — logo is positioned inside the header bounds (alignment)', async () => {
       await spot(header.logoImage());
       await header.setDesktopView();
       const logoBox = await header.logoImage().boundingBox();
@@ -174,7 +174,7 @@ test.describe('Shopify Header', () => {
   // ===========================================================
   test.describe('Header icons and links', () => {
 
-    test('search icon is displayed and has an accessible name', async ({ preset }) => {
+    test('HD-ICON-01 — search icon is displayed and has an accessible name', async ({ preset }) => {
       await spot(header.searchToggle());
       test.skip(
         !preset.features.searchIconDesktop,
@@ -189,14 +189,14 @@ test.describe('Shopify Header', () => {
       expect((label ?? '').trim().length).toBeGreaterThan(0);
     });
 
-    test('account icon is present and accessible', async ({ preset }) => {
+    test('HD-ICON-02 — account icon is present and accessible', async ({ preset }) => {
       await spot(header.accountIcon());
       test.skip(!preset.features.account, 'This preset does not expose an account control.');
       // Rendered as a <shopify-account> custom element (signed-out avatar).
       await expect(header.accountIcon()).toBeAttached();
     });
 
-    test('cart link is displayed, points to /cart and is accessible', async () => {
+    test('HD-ICON-03 — cart link is displayed, points to /cart and is accessible', async () => {
       await spot(header.cartLink());
       const cart = header.cartLink();
       await expect(cart).toBeVisible();
@@ -205,7 +205,7 @@ test.describe('Shopify Header', () => {
       expect((label ?? '').toLowerCase()).toContain('cart');
     });
 
-    test('cart shows an item count badge', async () => {
+    test('HD-ICON-04 — cart shows an item count badge', async () => {
       await spot(header.cartCount());
       await expect(header.cartCount()).toBeAttached();
       // Empty cart on a fresh session → count of 0. The badge carries the
@@ -213,7 +213,7 @@ test.describe('Shopify Header', () => {
       expect(await header.cartCountText()).toMatch(/\d+/);
     });
 
-    test('clicking the cart link navigates to the cart page', async ({ page }) => {
+    test('HD-ICON-05 — clicking the cart link navigates to the cart page', async ({ page }) => {
       await header.setDesktopView();
       // The cart link opens an off-canvas drawer via data-bs-toggle, but a
       // direct navigation to its href must still resolve to the cart page.
@@ -227,7 +227,7 @@ test.describe('Shopify Header', () => {
   // ===========================================================
   test.describe('Navigation behaviour', () => {
 
-    test('desktop navigation is visible with the expected number of menu items', async ({ preset }) => {
+    test('HD-NAV-01 — desktop navigation is visible with the expected number of menu items', async ({ preset }) => {
       await spot(header.desktopNav());
       await header.setDesktopView();
       await expect(header.desktopNav()).toBeVisible();
@@ -236,7 +236,7 @@ test.describe('Shopify Header', () => {
       );
     });
 
-    test('every top-level navigation title is non-empty and fully visible (not truncated)', async () => {
+    test('HD-NAV-02 — every top-level navigation title is non-empty and fully visible (not truncated)', async () => {
       await spot(header.topLevelLinks());
       await header.setDesktopView();
       const links = header.topLevelLinks();
@@ -257,7 +257,7 @@ test.describe('Shopify Header', () => {
       }
     });
 
-    test('single-level home item navigates to the home page', async ({ page, preset }) => {
+    test('HD-NAV-03 — single-level home item navigates to the home page', async ({ page, preset }) => {
       await header.setDesktopView();
       const label = preset.nav.homeLabel;
       test.skip(
@@ -270,7 +270,7 @@ test.describe('Shopify Header', () => {
       await expect(page).toHaveURL(homeUrlPattern(preset.url));
     });
 
-    test('single-level blog item navigates to the blog', async ({ page, preset }) => {
+    test('HD-NAV-04 — single-level blog item navigates to the blog', async ({ page, preset }) => {
       await header.setDesktopView();
       const label = preset.nav.blogLabel;
       test.skip(
@@ -289,7 +289,7 @@ test.describe('Shopify Header', () => {
   // ===========================================================
   test.describe('Navigation structure and depth', () => {
 
-    test('exposes single-level (flat) navigation links', async ({ preset }) => {
+    test('HD-STRUCT-01 — exposes single-level (flat) navigation links', async ({ preset }) => {
       await header.setDesktopView();
       // Flat, non-nesting entries this preset declares in its config.
       const flatLabels = [preset.nav.homeLabel, preset.nav.blogLabel].filter(Boolean);
@@ -303,7 +303,7 @@ test.describe('Shopify Header', () => {
       }
     });
 
-    test('exposes two-level nested navigation (level-2 items exist)', async ({ preset }) => {
+    test('HD-STRUCT-02 — exposes two-level nested navigation (level-2 items exist)', async ({ preset }) => {
       await spot(header.level2Links());
       test.skip(
         !preset.features.navDepth2,
@@ -314,7 +314,7 @@ test.describe('Shopify Header', () => {
       expect(await header.level2Links().count()).toBeGreaterThan(0);
     });
 
-    test('exposes three-level nested navigation (level-3 items exist)', async ({ preset }) => {
+    test('HD-STRUCT-03 — exposes three-level nested navigation (level-3 items exist)', async ({ preset }) => {
       await spot(header.level3Links());
       test.skip(
         !preset.features.navDepth3,
@@ -323,7 +323,7 @@ test.describe('Shopify Header', () => {
       expect(await header.level3Links().count()).toBeGreaterThan(0);
     });
 
-    test('boundary: no navigation title at any level is visually truncated', async () => {
+    test('HD-STRUCT-04 — boundary: no navigation title at any level is visually truncated', async () => {
       await spot(header.topLevelLinks());
       await header.setDesktopView();
       const groups = [
@@ -344,7 +344,7 @@ test.describe('Shopify Header', () => {
       }
     });
 
-    test('checklist: long top-level menu (10+ items)', async () => {
+    test('HD-STRUCT-05 — checklist: long top-level menu (10+ items)', async () => {
       const count = await header.topLevelItemCount();
       test.skip(
         count < 10,
@@ -364,12 +364,12 @@ test.describe('Shopify Header', () => {
       'This preset does not use a mega menu (features.megaMenu = false).'
     );
 
-    test('a mega menu is present in the navigation', async () => {
+    test('HD-MEGA-01 — a mega menu is present in the navigation', async () => {
       await spot(header.megaMenuItems());
       expect(await header.megaMenuItems().count()).toBeGreaterThan(0);
     });
 
-    test('hovering the mega-menu trigger reveals its panel', async ({ isMobile }) => {
+    test('HD-MEGA-02 — hovering the mega-menu trigger reveals its panel', async ({ isMobile }) => {
       await spot(header.megaMenuContent());
       test.skip(isMobile, 'Hover-reveal mega menu is a desktop-only interaction.');
       await header.setDesktopView();
@@ -377,7 +377,7 @@ test.describe('Shopify Header', () => {
       await expect(header.megaMenuContent()).toBeVisible();
     });
 
-    test('mega-menu panel contains product / collection links', async ({ isMobile }) => {
+    test('HD-MEGA-03 — mega-menu panel contains product / collection links', async ({ isMobile }) => {
       await spot(header.megaMenuContent());
       test.skip(isMobile, 'Hover-reveal mega menu is a desktop-only interaction.');
       await header.setDesktopView();
@@ -392,21 +392,21 @@ test.describe('Shopify Header', () => {
   // ===========================================================
   test.describe('Responsive header', () => {
 
-    test('desktop: inline navigation shown, hamburger hidden', async () => {
+    test('HD-RESP-01 — desktop: inline navigation shown, hamburger hidden', async () => {
       await spot(header.desktopNav());
       await header.setDesktopView();
       await expect(header.desktopNav()).toBeVisible();
       await expect(header.mobileMenuButton()).toBeHidden();
     });
 
-    test('mobile: hamburger shown, inline navigation hidden', async () => {
+    test('HD-RESP-02 — mobile: hamburger shown, inline navigation hidden', async () => {
       await spot(header.mobileMenuButton());
       await header.setMobileView();
       await expect(header.mobileMenuButton()).toBeVisible();
       await expect(header.desktopNav()).toBeHidden();
     });
 
-    test('mobile: hamburger opens the navigation drawer', async ({ preset }) => {
+    test('HD-RESP-03 — mobile: hamburger opens the navigation drawer', async ({ preset }) => {
       await spot(header.mobileDrawer());
       test.skip(
         !preset.features.mobileDrawer,
@@ -417,7 +417,7 @@ test.describe('Shopify Header', () => {
       expect(await header.mobileLinks().count()).toBeGreaterThan(0);
     });
 
-    test('mobile: nested drawer submenu expands', async ({ preset }) => {
+    test('HD-RESP-04 — mobile: nested drawer submenu expands', async ({ preset }) => {
       await spot(header.mobileSubmenus());
       test.skip(
         !preset.features.mobileSubmenu,
@@ -432,7 +432,7 @@ test.describe('Shopify Header', () => {
       await expect(header.mobileSubmenus().first()).toBeVisible();
     });
 
-    test('logo and header remain visible across all breakpoints', async () => {
+    test('HD-RESP-05 — logo and header remain visible across all breakpoints', async () => {
       await spot(header.header());
       for (const setView of [
         () => header.setMobileView(),
@@ -455,7 +455,7 @@ test.describe('Shopify Header', () => {
       'This preset does not expose header search (features.search = false).'
     );
 
-    test('search icon opens the search panel with a focusable input', async () => {
+    test('HD-SEARCH-01 — search icon opens the search panel with a focusable input', async () => {
       await spot(header.searchModal());
       await header.setDesktopView();
       await header.openSearch();
@@ -463,14 +463,14 @@ test.describe('Shopify Header', () => {
       await expect(header.searchInput()).toBeVisible();
     });
 
-    test('typing a query keeps the entered value', async () => {
+    test('HD-SEARCH-02 — typing a query keeps the entered value', async () => {
       await spot(header.searchInput());
       await header.setDesktopView();
       await header.searchFor('dress');
       await expect(header.searchInput()).toHaveValue('dress');
     });
 
-    test('negative: empty search does not navigate away from the store', async ({ page }) => {
+    test('HD-SEARCH-03 — negative: empty search does not navigate away from the store', async ({ page }) => {
       await spot(header.searchInput());
       await header.setDesktopView();
       await header.openSearch();
@@ -489,7 +489,7 @@ test.describe('Shopify Header', () => {
   // ===========================================================
   test.describe('Accessibility', () => {
 
-    test('header region has no critical accessibility violations (axe)', async ({ page }) => {
+    test('HD-A11Y-01 — header region has no critical accessibility violations (axe)', async ({ page }) => {
       // Scoped to the theme's <site-header> custom element — the header
       // root is the same across every preset.
       const results = await new AxeBuilder({ page })
@@ -502,7 +502,7 @@ test.describe('Shopify Header', () => {
       ).toEqual([]);
     });
 
-    test('all interactive header controls expose an accessible name', async () => {
+    test('HD-A11Y-02 — all interactive header controls expose an accessible name', async () => {
       await spot(header.logoLink());
       await header.setDesktopView();
       const controls = [
@@ -520,7 +520,7 @@ test.describe('Shopify Header', () => {
       }
     });
 
-    test('search toggle is reachable and operable by keyboard', async ({ preset }) => {
+    test('HD-A11Y-03 — search toggle is reachable and operable by keyboard', async ({ preset }) => {
       await spot(header.searchToggle());
       test.skip(!preset.features.search, 'This preset does not expose header search.');
       // Use the breakpoint where this preset actually renders the icon.
@@ -542,7 +542,7 @@ test.describe('Shopify Header', () => {
   // ===========================================================
   test.describe('Edge cases', () => {
 
-    test('header stays visible (sticky) after scrolling down the page', async ({ preset }) => {
+    test('HD-EDGE-01 — header stays visible (sticky) after scrolling down the page', async ({ preset }) => {
       await spot(header.header());
       test.skip(
         !preset.features.stickyHeader,
@@ -553,7 +553,7 @@ test.describe('Shopify Header', () => {
       await expect(header.header()).toBeInViewport();
     });
 
-    test('does not produce uncaught console errors on load', async ({ page }) => {
+    test('HD-EDGE-02 — does not produce uncaught console errors on load', async ({ page }) => {
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await header.gotoHome();
@@ -561,7 +561,7 @@ test.describe('Shopify Header', () => {
       expect(errors, errors.join('\n')).toEqual([]);
     });
 
-    test('dead / placeholder submenu links (href="#") stay on the current origin', async ({ isMobile, preset }) => {
+    test('HD-EDGE-03 — dead / placeholder submenu links (href="#") stay on the current origin', async ({ isMobile, preset }) => {
       await spot(header.megaMenuContent());
       test.skip(
         !preset.features.megaMenu,

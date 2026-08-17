@@ -77,7 +77,7 @@
         "sections": [
           {
             "cards": 7,
-            "rating": true,
+            "rating": false,
             "image": true,
             "secondaryText": false
           }
@@ -86,6 +86,76 @@
         "arrows": false,
         "loop": true,
         "autoplay": false
+      },
+      "footer": {
+        "columns": 3,
+        "linksPerColumn": [
+          5,
+          5,
+          5
+        ],
+        "newsletter": true,
+        "social": 0,
+        "brandLogo": false,
+        "brandBlocks": 1,
+        "accordion": true
+      },
+      "simpleSections": {
+        "icon_with_text": [
+          {
+            "items": 4,
+            "images": 0,
+            "links": 0,
+            "headings": 4
+          }
+        ],
+        "image_banner": [
+          {
+            "items": 0,
+            "images": 2,
+            "links": 0,
+            "headings": 3
+          }
+        ],
+        "spotlight_gallery": [
+          {
+            "items": 96,
+            "images": 97,
+            "links": 0,
+            "headings": 0
+          }
+        ],
+        "image_gallery": [
+          {
+            "items": 8,
+            "images": 8,
+            "links": 8,
+            "headings": 0
+          }
+        ]
+      },
+      "faq": {
+        "questions": 4,
+        "firstOpenAtLoad": true,
+        "oneAtATime": true,
+        "cta": true,
+        "ctaLabel": "Need Help?",
+        "stickyColumn": true
+      },
+      "featuredCollection": {
+        "rows": [
+          {
+            "cards": 8,
+            "swatches": false
+          },
+          {
+            "cards": 15,
+            "swatches": false
+          }
+        ]
+      },
+      "shoppableVideo": {
+        "cards": 5
       }
     },
     {
@@ -147,8 +217,8 @@
       "testimonial": {
         "sections": [
           {
-            "cards": 3,
-            "rating": true,
+            "cards": 5,
+            "rating": false,
             "image": true,
             "secondaryText": true
           }
@@ -157,6 +227,94 @@
         "arrows": false,
         "loop": true,
         "autoplay": false
+      },
+      "footer": {
+        "columns": 3,
+        "linksPerColumn": [
+          6,
+          6,
+          6
+        ],
+        "newsletter": false,
+        "social": 4,
+        "brandLogo": true,
+        "brandBlocks": 2,
+        "accordion": true
+      },
+      "simpleSections": {
+        "brand_logo": [
+          {
+            "items": 9,
+            "images": 9,
+            "links": 0,
+            "headings": 0
+          }
+        ],
+        "icon_with_text": [
+          {
+            "items": 4,
+            "images": 0,
+            "links": 0,
+            "headings": 0
+          },
+          {
+            "items": 4,
+            "images": 0,
+            "links": 0,
+            "headings": 0
+          }
+        ],
+        "image_banner": [
+          {
+            "items": 0,
+            "images": 2,
+            "links": 1,
+            "headings": 0
+          }
+        ],
+        "grid_banner": [
+          {
+            "items": 2,
+            "images": 2,
+            "links": 2,
+            "headings": 0
+          }
+        ],
+        "newsletter": [
+          {
+            "items": 0,
+            "images": 1,
+            "links": 0,
+            "headings": 0
+          }
+        ],
+        "image_gallery": [
+          {
+            "items": 8,
+            "images": 8,
+            "links": 0,
+            "headings": 0
+          }
+        ]
+      },
+      "faq": {
+        "questions": 6,
+        "firstOpenAtLoad": true,
+        "oneAtATime": true,
+        "cta": true,
+        "ctaLabel": "Contact us",
+        "stickyColumn": true
+      },
+      "featuredCollection": {
+        "rows": [
+          {
+            "cards": 4,
+            "swatches": false
+          }
+        ]
+      },
+      "shoppableVideo": {
+        "cards": 12
       }
     },
     {
@@ -211,14 +369,14 @@
         "sections": [
           {
             "cards": 4,
-            "rating": true,
+            "rating": false,
             "image": true,
             "secondaryText": true
           },
           {
-            "cards": 4,
+            "cards": 5,
             "rating": false,
-            "image": false,
+            "image": true,
             "secondaryText": true
           }
         ],
@@ -226,6 +384,92 @@
         "arrows": false,
         "loop": true,
         "autoplay": false
+      },
+      "footer": {
+        "columns": 3,
+        "linksPerColumn": [
+          5,
+          5,
+          5
+        ],
+        "newsletter": true,
+        "social": 0,
+        "brandLogo": true,
+        "brandBlocks": 2,
+        "accordion": true
+      },
+      "simpleSections": {
+        "number_counter": [
+          {
+            "items": 6,
+            "images": 0,
+            "links": 0,
+            "headings": 0
+          }
+        ],
+        "icon_with_text": [
+          {
+            "items": 4,
+            "images": 0,
+            "links": 0,
+            "headings": 0
+          }
+        ],
+        "image_banner": [
+          {
+            "items": 0,
+            "images": 1,
+            "links": 0,
+            "headings": 0
+          }
+        ],
+        "specification_section": [
+          {
+            "items": 6,
+            "images": 7,
+            "links": 0,
+            "headings": 7
+          }
+        ],
+        "grid_showcase": [
+          {
+            "items": 5,
+            "images": 3,
+            "links": 0,
+            "headings": 3
+          }
+        ],
+        "image_gallery": [
+          {
+            "items": 6,
+            "images": 6,
+            "links": 0,
+            "headings": 0
+          }
+        ]
+      },
+      "faq": {
+        "questions": 4,
+        "firstOpenAtLoad": true,
+        "oneAtATime": true,
+        "cta": false,
+        "ctaLabel": null,
+        "stickyColumn": false
+      },
+      "faqTabs": {
+        "tabs": 3,
+        "questionsPerPanel": [
+          4,
+          4,
+          4
+        ],
+        "firstTabActive": true,
+        "oneOpenPerPanel": true
+      },
+      "comparisonSliders": {
+        "image_comparison": {
+          "sliders": 5
+        }
       }
     },
     {
@@ -279,7 +523,7 @@
         "sections": [
           {
             "cards": 6,
-            "rating": true,
+            "rating": false,
             "image": true,
             "secondaryText": true
           }
@@ -288,6 +532,73 @@
         "arrows": true,
         "loop": true,
         "autoplay": false
+      },
+      "footer": {
+        "columns": 3,
+        "linksPerColumn": [
+          7,
+          7,
+          7
+        ],
+        "newsletter": true,
+        "social": 0,
+        "brandLogo": false,
+        "brandBlocks": 2,
+        "accordion": true
+      },
+      "simpleSections": {
+        "marquee": [
+          {
+            "items": 16,
+            "images": 8,
+            "links": 0,
+            "headings": 8
+          }
+        ],
+        "icon_with_text": [
+          {
+            "items": 3,
+            "images": 0,
+            "links": 1,
+            "headings": 3
+          }
+        ],
+        "grid_banner": [
+          {
+            "items": 5,
+            "images": 0,
+            "links": 10,
+            "headings": 0
+          }
+        ],
+        "image_gallery": [
+          {
+            "items": 10,
+            "images": 10,
+            "links": 10,
+            "headings": 0
+          }
+        ]
+      },
+      "featuredCollection": {
+        "rows": [
+          {
+            "cards": 16,
+            "swatches": true
+          },
+          {
+            "cards": 16,
+            "swatches": true
+          }
+        ]
+      },
+      "shoppableVideo": {
+        "cards": 10
+      },
+      "comparisonSliders": {
+        "before_after": {
+          "sliders": 3
+        }
       }
     }
   ]

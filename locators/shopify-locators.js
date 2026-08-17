@@ -54,7 +54,7 @@ const LOCATORS = {
     megaToggle:      'site-header a[aria-controls*="HeaderMegaMenu"]',
     megaContent:     '.header-mega-menu',
     megaTabs:        '.header-mega-menu__tab-list',
-    mobileMenu:      'dialog.header-menu__drawer',
+    mobileMenu:      '.header-menu__drawer.offcanvas',
     closeButton:     'button.header-menu__drawer-close',
   },
 
@@ -62,10 +62,14 @@ const LOCATORS = {
   // Nested entries use native <details>/<summary>, so "expanded"
   // is the presence of the `open` attribute rather than a CSS class.
   mobileNav: {
-    drawer:    'dialog.header-menu__drawer',
-    menu:      'ul.header-menu__drawer-list',
+    drawer:    '.header-menu__drawer.offcanvas',
+    // The top-level <ul> carries only generic utility classes
+    // ("list-unstyled px-1") — there is no .header-menu__drawer-list.
+    // Identify it by the items it holds instead of by a class name.
+    menu:      '.header-menu__drawer ul:has(> li.header-menu__drawer-item)',
     items:     'li.header-menu__drawer-item',
-    links:     '.header-menu__drawer-list a.header-menu__drawer-link',
+    // Scope to the drawer, not to a list class that does not exist.
+    links:     '.header-menu__drawer a.header-menu__drawer-link',
     details:   'details.header-menu__drawer-details',
     summary:   'summary.header-menu__drawer-summary',
     // Click the chevron, not the <summary>: the summary also contains the
@@ -88,13 +92,10 @@ const LOCATORS = {
     error:  '.errors, .password-form__message, [class*="error"]',
   },
 
-  // ── Footer ────────────────────────────────────────────────
-  footer: {
-    container:   'footer, .footer, #shopify-section-footer',
-    links:       'footer a',
-    newsletter:  'footer input[type="email"], .newsletter input[type="email"]',
-    submitBtn:   'footer button[type="submit"], .newsletter button[type="submit"]',
-  },
+  // (The footer block lives further down, with the other verified
+  // Selena selectors. A generic placeholder used to sit here and was
+  // silently overridden by it — duplicate keys in an object literal
+  // resolve to the last one — so it has been removed.)
 
   // ── Search (predictive-search off-canvas) ─────────────────
   // Opened by the header search icon. The panel has no submit button —
@@ -386,6 +387,224 @@ const LOCATORS = {
     wrapper:  '.video-grid-wrapper',
     player:   'video, iframe[src*="youtube"], iframe[src*="vimeo"]',
     trigger:  '[class*="deferred-media__poster"], button[aria-label*="play" i]',
+  },
+
+  // ── Footer ─────────────────────────────────────────────────
+  // Verified against all four presets. The structure is identical
+  // everywhere; only the content and which optional blocks are
+  // present differ (declared in data/presets.json).
+  //
+  // Menu columns are native <details>/<summary>, exactly like the
+  // mobile nav drawer — they collapse into accordions on small
+  // screens and sit open on desktop. "Expanded" is therefore the
+  // `open` attribute, not a CSS class.
+  //
+  // Note: block-scoped classes carry a generated suffix
+  // (footer-menu__list-AV05Ba...__footer_menu_2), so never match on a
+  // full class string — always the stable BEM root.
+  footer: {
+    root:        'footer.footer',
+    inner:       '.footer__inner',
+    blocks:      '.footer__blocks',
+
+    // Link columns
+    menu:        '.footer-menu',
+    menuTitle:   '.footer-menu__title',
+    menuDetails: 'details.footer-menu__details',
+    menuSummary: 'summary.footer-menu__summary',
+    menuChevron: '.footer-menu__chevron',
+    menuList:    'ul.footer-menu__list',
+    menuItem:    'li.footer-menu__item',
+    menuLink:    'a.footer-menu__link',
+
+    // Brand block (logo / description / social)
+    brandBlock:  '.footer-brand-block',
+    brandInfo:   '.footer-brand-info',
+    brandLogo:   '.footer-brand-info__logo',
+    brandLogoImg:'.footer-brand-info__logo-img',
+
+    // Social icons reuse the announcement-bar component.
+    socialWrap:  '.footer-brand-info__social',
+    socialList:  '.announcement-bar-social__list',
+    socialItem:  'li.announcement-bar-social__item',
+    socialLink:  'a.announcement-bar-social__link',
+
+    // Newsletter signup.
+    //
+    // Addressed semantically, NOT by class. The theme shipped this
+    // input as `newsletter__input--border-solid` — the BEM modifier
+    // without its base class — so `input.newsletter__input` matched
+    // nothing and every newsletter check failed at once. The email
+    // field is the only type="email" in this form, and that is a far
+    // more stable thing to point at than a class the theme rewrites.
+    newsletterForm:   'form.newsletter__form',
+    newsletterInput:  'form.newsletter__form input[type="email"]',
+    newsletterSubmit: 'form.newsletter__form button[type="submit"], form.newsletter__form button',
+  },
+
+  // ── FAQ (native <details> accordion) ──────────────────────
+  // Verified on khajal, doll and dense: identical markup, and all
+  // three behave one-at-a-time with the first question open at load.
+  // Root selector comes from utils/simple-sections.js so that   // never picks up .
+  // ── FAQ (native <details> accordion) ──────────────────────
+  // Verified on khajal, doll and dense: identical markup, and all
+  // three open the first question at load and allow only one open at
+  // a time. The root selector comes from utils/simple-sections.js so
+  // that "faq" can never pick up "faq_with_tabs".
+  faq: {
+    item:    'details.faq-item',
+    trigger: 'summary.faq-item__trigger',
+    heading: '.faq-heading',
+    body:    '.faq-item__body',
+    icon:    '.faq-item__icon-wrap',
+
+    // Two-column layout: copy + CTA on the left, questions on the
+    // right. The left column is declared `position: sticky; top:100px`
+    // so it stays in view while the questions scroll past.
+    // dense ships only the accordion column.
+    inner:        '.faq-section__inner',
+    contentCol:   '.faq-section__content-col',
+    accordionCol: '.faq-section__accordion-col',
+    // "Need Help?" on khajal, "Contact us" on doll.
+    cta:          '.faq-section__inner a.btn, .faq-section__inner .btn',
+  },
+
+  // ── Comparison sliders ────────────────────────────────────
+  // Two sections, one mechanic: two images stacked, a draggable
+  // divider revealing more or less of the one underneath.
+  //
+  //   image_comparison  dense      5 sliders, profile thumbnails
+  //   before_after      moonlight  3 sliders, each selling a product
+  //
+  // Both declare role="slider" on the container. Neither carries
+  // aria-valuenow, which is what that role exists to expose.
+  imageComparison: {
+    container: '.comparison-container',
+    // The MAIN comparison widget — five of them on dense.
+    // .comparison-profile-slider is a DIFFERENT, smaller thing (the
+    // profile thumbnails), and there are ten of those, so matching on
+    // it counts twice as many sliders as exist.
+    slider:    '.comparison-container',
+    profileSlider: '.comparison-profile-slider',
+    divider:   '.comparison-slider__divider',
+    // The element the theme actually binds its drag handler to. The
+    // __divider is decorative and carries pointer-events: none, so
+    // dragging it can never do anything on either section.
+    handle:    '[data-before-after-handle]',
+    grip:      '.comparison-slider__circle_line',
+    layer:     '.comparison-slider-layer',
+    image:     '.comparison-slider__img',
+    label:     '.comparison-slider__label',
+    profile:   '.comparison-profile__image',
+    role:      '[role="slider"]',
+  },
+  beforeAfter: {
+    container: '.before-after-container',
+    slider:    '.before-after-slider',
+    divider:   '.before-after-slider__divider',
+    handle:    '[data-before-after-handle]',
+    grip:      '.before-after-slider__circle_line',
+    layer:     '.before-after-slider__layer',
+    image:     '.before-after-slider__img',
+    label:     '.before-after-slider__label',
+    feature:   '.before-after-product__feat',
+    productImg:'.before-after-product__img',
+    atc:       '.before-after-product__atc',
+    role:      '[role="slider"]',
+  },
+
+  // ── Video banner (single autoplaying background video) ────
+  // khajal and dense. Muted + loop + playsinline + autoplay on both,
+  // which is what a background video must be to play at all on iOS.
+  videoBanner: {
+    banner:   '.video-banner__banner',
+    media:    '.video-banner__media',
+    video:    'video',
+    slot:     '.video-banner__content-slot',
+    poster:   'img',
+    cta:      'a.btn, button',
+  },
+
+  // ── Shoppable video (carousel of video cards with products) ──
+  // khajal (5 cards), doll (12), moonlight (10). Identical markup.
+  // Each card carries its own play and mute toggles and an overlay
+  // of product cards.
+  shoppableVideo: {
+    card:        '.sv-card',
+    media:       '.sv-card__media',
+    videoWrap:   '.sv-card__video-wrap',
+    video:       '.sv-card__video',
+    playToggle:  '.sv-card__play-toggle',
+    muteToggle:  '.sv-card__mute-toggle',
+    expand:      '.sv-card__expand',
+    productOverlay: '.sv-card__product-overlay',
+    productGroup:   '.sv-card__product-group',
+    productLink:    'a[href*="/products/"]',
+    price:          '[class*="price"]',
+    nextArrow:   '.swiper-button-next',
+    prevArrow:   '.swiper-button-prev',
+  },
+
+  // ── Featured collection (row of product cards) ────────────
+  // Verified on khajal (x2), doll and moonlight (x2).
+  //
+  // Two traps worth knowing:
+  //   * the card contains TWO anchors to the same product — the image
+  //     link (no text) and the title link. Reading the first one gives
+  //     an empty title, so the title has its own selector.
+  //   * khajal wraps each card's images in a NESTED swiper, so
+  //     ".swiper" inside this section is not the product carousel.
+  featuredCollection: {
+    item:       '.featured-collection__item',
+    card:       '.product-card',
+    mediaLink:  '.product-card__media-link',
+    image:      '.product-card__img',
+    badges:     '.product-card__badges',
+    badge:      '.product-card__badge',
+    quickView:  '.product-card__quick-view',
+    title:      '.product-title',
+    titleLink:  '.product-title a',
+    vendor:     '.product-vendor',
+    price:      '.product-price',
+    priceNow:   '.product-price__current',
+    priceWas:   '.product-price__compare',
+    swatches:   '.product-card__swatch',
+    // The OUTER carousel — the one whose slides are product cards.
+    carousel:   '.swiper:has(.featured-collection__item)',
+    // NOT [class*="next"]: Swiper marks the upcoming SLIDE with
+    // .swiper-slide-next, so a substring match grabs a product card
+    // instead of the arrow, and clicking it does nothing.
+    nextArrow:  '.swiper-button-next',
+    prevArrow:  '.swiper-button-prev',
+  },
+
+  // ── FAQ with tabs ─────────────────────────────────────────
+  // A DIFFERENT section from `faq`, not a variant of it. dense ships
+  // both: a plain accordion near the bottom of the page, and this
+  // tabbed one higher up.
+  //
+  // Structure: a tablist of numbered buttons, one panel per tab, and
+  // a nested accordion of questions inside each panel. Only the
+  // active panel is rendered with height.
+  //
+  //   role="tablist" > button.faq-tab__btn[aria-selected]
+  //   .faq-tab__panel > .faq-tab__panel-heading + details.faq-item
+  faqTabs: {
+    section:      '.faq-tabs-section',
+    root:         '.faq-tabs-root',
+    tablist:      '[role="tablist"]',
+    tab:          'button.faq-tab__btn',
+    tabNumber:    '.faq-tab__btn-num',
+    tabLabel:     '.faq-tab__btn-label',
+    panel:        '.faq-tab__panel',
+    panelHeading: '.faq-tab__panel-heading',
+    panelSubtitle:'.faq-tab__panel-subtitle',
+    // Questions reuse the same accordion markup as the plain FAQ.
+    item:         'details.faq-item',
+    trigger:      'summary.faq-item__trigger',
+    heading:      '.faq-heading',
+    body:         '.faq-item__body',
+    icon:         '.faq-item__icon-wrap',
   },
 
   home: {

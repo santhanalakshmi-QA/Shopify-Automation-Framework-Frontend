@@ -19,6 +19,7 @@ import { test as base, expect } from '@playwright/test';
 import { getPreset } from './presets.js';
 import { HeaderPage } from '../pages/HeaderPage.js';
 import { SlideshowPage } from '../pages/SlideshowPage.js';
+import { FooterPage } from '../pages/FooterPage.js';
 import { flashVerdict } from './demo-hud.js';
 
 /** Shape of one entry in data/presets.json, after env resolution. */
@@ -58,10 +59,46 @@ export interface Preset {
     loop: boolean;
     autoplay: boolean;
   };
+  faq?: {
+    questions: number;
+    firstOpenAtLoad: boolean;
+    oneAtATime: boolean;
+    /** Does this preset ship a help call-to-action in the section? */
+    cta: boolean;
+    ctaLabel: string | null;
+    /** Is the left content column declared position:sticky? */
+    stickyColumn: boolean;
+  };
+  /** Tabbed FAQ — a separate section type from `faq`. */
+  faqTabs?: {
+    tabs: number;
+    questionsPerPanel: number[];
+    firstTabActive: boolean;
+    oneOpenPerPanel: boolean;
+  };
+  /** One entry per featured-collection row on the home page. */
+  featuredCollection?: {
+    rows: Array<{ cards: number; swatches: boolean }>;
+  };
+  shoppableVideo?: { cards: number };
+  /** Drag-slider sections, keyed by section type. */
+  comparisonSliders?: Record<string, { sliders: number }>;
   richText?: {
     copyCode: boolean;
     heading: boolean;
     links: boolean;
+  };
+  /** Footer is a global region, like the header — not in `sections`. */
+  footer?: {
+    columns: number;
+    /** Expected link count for each column, in order. */
+    linksPerColumn: number[];
+    newsletter: boolean;
+    /** Number of social icons; 0 = this preset ships none. */
+    social: number;
+    brandLogo: boolean;
+    brandBlocks: number;
+    accordion: boolean;
   };
   features: {
     megaMenu: boolean;
@@ -89,6 +126,7 @@ interface PresetFixtures {
   verdict: void;
   headerPage: HeaderPage;
   slideshowPage: SlideshowPage;
+  footerPage: FooterPage;
 }
 
 export const test = base.extend<PresetFixtures>({
@@ -111,6 +149,11 @@ export const test = base.extend<PresetFixtures>({
   // Slideshow section page object, preset-aware.
   slideshowPage: async ({ page, preset }, use) => {
     await use(new SlideshowPage(page, preset));
+  },
+
+  // Footer page object, preset-aware.
+  footerPage: async ({ page, preset }, use) => {
+    await use(new FooterPage(page, preset));
   },
 
   /**

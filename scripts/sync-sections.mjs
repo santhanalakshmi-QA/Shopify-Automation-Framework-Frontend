@@ -57,6 +57,27 @@ for (const preset of data.presets) {
   await page.goto(preset.url, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2000);
 
+  // A cached session in .auth/ eventually expires, and the storefront
+  // then redirects to /password. That page has no sections, so an
+  // unguarded sync happily records "0 sections" and overwrites a
+  // perfectly good manifest with nothing — which then makes every
+  // section suite skip, silently, as though the work were done.
+  //
+  // Refuse to write anything from a page we were not actually let into.
+  const gated = await page.evaluate(() => ({
+    passwordForm: !!document.querySelector('form[action="/password"]'),
+    url: location.pathname,
+  }));
+  if (gated.passwordForm || gated.url.startsWith('/password')) {
+    console.error(
+      `  ${preset.key}: storefront redirected to the password gate — the cached session ` +
+      `in .auth/${preset.key}.json has expired.\n` +
+      `             Run "npm run unlock" and try again. Manifest left untouched.`
+    );
+    await context.close();
+    continue;
+  }
+
   const ids = await page.evaluate(() =>
     [...document.querySelectorAll('[id^="shopify-section-"]')].map((el) =>
       el.id.replace('shopify-section-', '')
@@ -64,6 +85,22 @@ for (const preset of data.presets) {
   );
 
   const sections = sectionTypesFrom(ids);
+
+  // Belt and braces to the password-gate guard above: a home page that
+  // suddenly renders NOTHING is far more likely to be a failed load
+  // than a merchant deleting every section. Wiping the manifest in that
+  // case turns every section suite into a silent skip, which reads as
+  // "all tests pass".
+  const had = Object.keys(preset.sections ?? {}).length;
+  if (had > 0 && Object.keys(sections).length === 0) {
+    console.error(
+      `  ${preset.key}: measured 0 sections but the manifest has ${had} — refusing to ` +
+      `overwrite.\n             Check the storefront loads, then re-run.`
+    );
+    await context.close();
+    continue;
+  }
+
   const before = JSON.stringify(preset.sections ?? {});
   preset.sections = sections;
   if (before !== JSON.stringify(sections)) changed++;
